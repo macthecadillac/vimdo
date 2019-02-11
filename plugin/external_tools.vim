@@ -8,6 +8,7 @@ let g:external_tools#exit_message = get(
       \ )
 let g:external_tools#term_height = get(g:, 'external_tools#term_height', 15)
 let g:external_tools#term_width = get(g:, 'external_tools#term_width', 79)
+let g:external_tools#remove_term_buffer_when_done = get(g:, 'external_tools#remove_term_buffer_when_done', 1)
 
 let b:file_path = getcwd()
 
@@ -31,11 +32,11 @@ endfunction
 " configuration, if any
 function! s:source_local_configuration()
   if filereadable('./.external_tools.vim')
-    source './.external_tools.vim'
+    execute 'source .external_tools.vim'
   else
     let l:root = s:find_root()
     if filereadable('./.external_tools.vim')
-      source './.external_tools.vim'
+      execute 'source .external_tools.vim'
     endif
   endif
 endfunction

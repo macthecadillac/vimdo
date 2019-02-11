@@ -4,7 +4,7 @@ A configurable plugin to run custom commands based on the filetype.
 
 ## Requirements
 
-Neovim > 0.2
+Neovim >= 0.2
 
 ## Installation
 
@@ -23,14 +23,14 @@ Plug 'macthecadillac/external-tools.nvim'
 The most important configuration is the `envs` option, which registers filetype
 hooks to a command. The dictionary key is a filetype that vim recognizes. The
 value of the dictionary consists of a list, with the first entry being the
-command associated to the filetype, and the second entry is the "verb" you would
-like vim to display as part of the execution buffer name.
+command associated to the filetype, and the second a boolean that tells the
+script whether to pass the file name on to the command as an argument.
 
 ```vim
 let g:external_tools#envs = {
-      \ 'python': ['/usr/bin/env python', 'Executing'],
-      \ 'sh': ['/bin/sh', 'Executing'],
-      \ 'tex': ['/usr/bin/latexmk -gg silent', 'Compiling'],
+      \ 'python': ['/usr/bin/env python', 1],
+      \ 'tex': ['/usr/bin/latexmk -gg silent', 1],
+      \ 'rust': ['/usr/bin/cargo build', 0],
       \ }
 ```
 
@@ -41,6 +41,7 @@ let g:external_tools#split_direction = 'down'
 let g:external_tools#exit_message = '\n-------------------------\nPress ENTER to exit'
 let g:external_tools#term_height = 15
 let g:external_tools#term_width = 79
+let g:external_tools#remove_term_buffer_when_done = 1
 ```
 
 ### Local Configurations
