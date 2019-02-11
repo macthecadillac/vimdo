@@ -47,7 +47,7 @@ let g:external_tools#remove_term_buffer_when_done = 1
 ### Local Configurations
 
 Same as the global configuration but instead of being in your `init.vim`, these
-options live in `.external-tools.vim` in a directory within your project. Place
+options live in `.external_tools.vim` in a directory within your project. Place
 it in the root directory (the directory where `.git` is) for it to take effect
 over the entire project or place it in the same folder as the file being edited
 for it to take effect in that directory. Global configurations will be
