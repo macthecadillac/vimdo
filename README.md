@@ -24,20 +24,29 @@ The most important configuration is the `envs` option, which registers filetype
 hooks to a command. The dictionary key is a filetype that vim recognizes. The
 value of the dictionary consists of a list, with the first entry being the
 command associated to the filetype, and the second a boolean that tells the
-script whether to pass the file name on to the command as an argument.
+script whether to pass the file name on to the command as an argument. No hooks
+are set out of the box.
+
+Example:
 
 ```vim
 let g:external_tools#envs = {
       \ 'python': ['/usr/bin/env python', 1],
-      \ 'tex': ['/usr/bin/latexmk -gg silent', 1],
+      \ 'tex': ['/usr/bin/latexmk -gg -silent', 1],
       \ 'rust': ['/usr/bin/cargo build', 0],
       \ }
 ```
 
-Additional options should be quite self-explanatory.
+Additional options should be quite self-explanatory. Shown here are the default
+values.
 
 ```vim
 let g:external_tools#split_direction = 'down'
+```
+
+Available directions are `up`, `down`, `left` and `right`.
+
+```vim
 let g:external_tools#exit_message = '\n-------------------------\nPress ENTER to exit'
 let g:external_tools#term_height = 15
 let g:external_tools#term_width = 79
