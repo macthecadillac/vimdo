@@ -31,9 +31,9 @@ Example:
 
 ```vim
 let g:external_tools#envs = {
-      \ 'python': ['/usr/bin/env python', 1],
+      \ 'python': [$HOME . '/anaconda3/bin/python', 1],
       \ 'tex': ['/usr/bin/latexmk -gg -silent', 1],
-      \ 'rust': ['/usr/bin/cargo build', 0],
+      \ 'rust': ['cargo build', 0],
       \ }
 ```
 
@@ -41,7 +41,7 @@ Additional options should be quite self-explanatory. Shown here are the default
 values.
 
 ```vim
-" Available directions are `up`, `down`, `left` and `right`.
+" Available directions are 'up', 'down', 'left' and 'right'.
 let g:external_tools#split_direction = 'down'
 let g:external_tools#exit_message = '\n-------------------------\nPress ENTER to exit'
 let g:external_tools#term_height = 15
