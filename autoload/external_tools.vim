@@ -24,8 +24,8 @@ function! s:source_local_configuration()
     execute 'source .external_tools.vim'
   else
     let l:root = s:find_root()
-    if filereadable('./.external_tools.vim')
-      execute 'source .external_tools.vim'
+    if filereadable(l:root . '/.external_tools.vim')
+      execute 'source ' . l:root . '/.external_tools.vim'
     endif
   endif
 endfunction
