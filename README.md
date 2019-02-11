@@ -41,12 +41,8 @@ Additional options should be quite self-explanatory. Shown here are the default
 values.
 
 ```vim
+" Available directions are `up`, `down`, `left` and `right`.
 let g:external_tools#split_direction = 'down'
-```
-
-Available directions are `up`, `down`, `left` and `right`.
-
-```vim
 let g:external_tools#exit_message = '\n-------------------------\nPress ENTER to exit'
 let g:external_tools#term_height = 15
 let g:external_tools#term_width = 79
