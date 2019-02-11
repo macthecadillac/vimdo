@@ -1,3 +1,4 @@
+" TODO: make composite commands out of configuration files
 let b:file_path = getcwd()
 
 " We define the root directory as the one that contains the git folder
