@@ -1,18 +1,31 @@
-function! s:job_stdout(job_id, data, event) dict
-  let l:self.stdout = l:self.stdout + a:data
-endfunction
+let b:file_path = getcwd()
 
-function! s:job_stderr(job_id, data, event) dict
-  let l:self.stderr = l:self.stderr + a:data
-endfunction
-
-function! s:job_exit(job_id, data, event) dict
-  let l:bufnr = g:external_tools#jobs[a:job_id][1]
-  unlet g:external_tools#jobs[a:job_id]
-  if g:external_tools#remove_term_buffer_when_done
-    execute 'bd! ' . l:bufnr
+" We define the root directory as the one that contains the git folder
+function! s:find_root()
+  if globpath('.', '.git') ==# './.git'
+    let l:gitdir = getcwd()
+    " Return working directory to the original value
+    execute 'cd' fnameescape(b:file_path)
+    return l:gitdir
+  elseif getcwd() ==# '/'
+    execute 'cd' fnameescape(b:file_path)
+    return 'Reached filesystem boundary'
   else
-    close
+    execute 'cd' fnameescape('..')
+    return s:find_root()
+  endif
+endfunction
+
+" Find local environmental configuration and overwrites the system-wide
+" configuration, if any
+function! s:source_local_configuration()
+  if filereadable('./.external_tools.vim')
+    execute 'source .external_tools.vim'
+  else
+    let l:root = s:find_root()
+    if filereadable('./.external_tools.vim')
+      execute 'source .external_tools.vim'
+    endif
   endif
 endfunction
 
@@ -54,9 +67,29 @@ function! s:name_buffer(filename, with_filename)
     execute "file " . l:bufname
 endfunction
 
+function! s:job_stdout(job_id, data, event) dict
+  let l:self.stdout = l:self.stdout + a:data
+endfunction
+
+function! s:job_stderr(job_id, data, event) dict
+  let l:self.stderr = l:self.stderr + a:data
+endfunction
+
+function! s:job_exit(job_id, data, event) dict
+  let l:bufnr = g:external_tools#jobs[a:job_id][1]
+  unlet g:external_tools#jobs[a:job_id]
+  if g:external_tools#remove_term_buffer_when_done
+    execute 'bd! ' . l:bufnr
+  else
+    close
+  endif
+endfunction
+
 function! external_tools#filetype_cmd()
   let l:filename = expand('%:f')
   let l:filetype = &filetype
+
+  call s:source_local_configuration()
 
   let l:with_filename = g:external_tools#envs[l:filetype][1]
   if l:with_filename
