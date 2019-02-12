@@ -19,17 +19,17 @@ Plug 'macthecadillac/external-tools.nvim'
 
 ## Features
 
-1. Command structure
-...[x] Single command
-...[ ] Composite commands
-...[ ] File type based commands
-...[ ] Non file type based commands
-...[ ] Terminal based commands
-...[ ] Background commands
+- Command structure
+  - [x] Single command
+  - [ ] Composite commands
+  - [ ] File type based commands
+  - [ ] Non file type based commands
+  - [ ] Terminal based commands
+  - [ ] Background commands
 
-2. Other TODOs
-...[ ] Terminate non-terminal based commands
-...[ ] Process manager
+- Other TODOs
+  - [ ] Terminate non-terminal based commands
+  - [ ] Process manager
 
 ## Usage
 
