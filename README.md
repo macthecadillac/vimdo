@@ -17,6 +17,20 @@ Add the following line to your `init.vim`
 Plug 'macthecadillac/external-tools.nvim'
 ```
 
+## Features
+
+1. Command structure
+...[x] Single command
+...[ ] Composite commands
+...[ ] File type based commands
+...[ ] Non file type based commands
+...[ ] Terminal based commands
+...[ ] Background commands
+
+2. Other TODOs
+...[ ] Terminate non-terminal based commands
+...[ ] Process manager
+
 ## Usage
 
 Set up hooks for different file types (see below). The command `FileTypeCmd`
