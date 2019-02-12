@@ -20,8 +20,8 @@ Plug 'macthecadillac/external-tools.nvim'
 ## Usage
 
 Set up hooks for different file types (see below). The command `FileTypeCmd`
-will execute the command in the neovim built-in terminal. You can optionally
-register a key binding to invoke the command:
+will execute the external command in the neovim built-in terminal. You can
+optionally register a key binding to invoke the command:
 
 ```vim
 autocmd FileType python nnoremap <buffer> <A-r> :FileTypeCmd<CR>
