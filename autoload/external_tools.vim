@@ -1,5 +1,4 @@
 " TODO: make composite commands out of configuration files
-let b:file_path = getcwd()
 
 " We define the root directory as the one that contains the git folder
 function! s:find_root()
@@ -87,6 +86,7 @@ function! s:job_exit(job_id, data, event) dict
 endfunction
 
 function! external_tools#filetype_cmd()
+  let b:file_path = getcwd()
   let l:filename = expand('%:f')
   let l:filetype = &filetype
 
