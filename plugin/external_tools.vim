@@ -11,3 +11,5 @@ let g:external_tools#term_width = get(g:, 'external_tools#term_width', 79)
 let g:external_tools#remove_term_buffer_when_done = get(g:, 'external_tools#remove_term_buffer_when_done', 1)
 
 command! FileTypeCmd call external_tools#filetype_cmd()
+
+command! -bang -nargs=+ ExtCmd call external_tools#external_cmd('<bang>', <f-args>)

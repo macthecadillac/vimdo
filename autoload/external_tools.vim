@@ -85,6 +85,12 @@ function! s:job_exit(job_id, data, event) dict
   endif
 endfunction
 
+function! external_tools#external_cmd(bang, opts, args, ...)
+  let b:file_path = getcwd()
+  let l:filename = expand('%:f')
+  let l:filetype = &filetype
+endfunction
+
 function! external_tools#filetype_cmd()
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
