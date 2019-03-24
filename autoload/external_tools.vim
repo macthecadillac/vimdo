@@ -175,7 +175,7 @@ function! external_tools#external_cmd(bang, ...)
     endif
   catch /l:cmdstr/
     echohl ErrorMsg
-    echom 'Sub-command not defined. See :h external_tools.'
+    echom 'Sub-command not defined.'
     echohl NONE
   endtry
 endfunction

@@ -37,14 +37,8 @@ Plug 'macthecadillac/external-tools.nvim'
 
 ## Usage
 
-Set up hooks for different file types (see below). The command `ExtCmd` will
-execute the external command. You can optionally register a key binding to
-invoke the command:
-
-```vim
-autocmd ExtCmd python nnoremap <buffer> <A-r> :ExtCmd<CR>
-autocmd ExtCmd python nnoremap <buffer> <A-r> :ExtCmd run<CR>
-```
+Set up hooks for different file types (see below). The command `ExtCmd cmd` will
+execute the external command associated with `cmd`.
 
 ## Configuration
 
@@ -56,13 +50,13 @@ option. This sets up hooks for each file type to external commands.
 recognizes, and their associated values are dictionaries that associate file
 type specific commands with a dictionary with the following entries:
 
-- 'cmd': string. The command to be invoked
-- 'with_filename': 1 or 0. Whether to invoke the command with the file name.
-- 'in_term': 1 or 0. To execute the command in the built-in terminal or in the
+- `cmd`: string. The command to be invoked
+- `with_filename`: 1 or 0. Whether to invoke the command with the file name.
+- `in_term`: 1 or 0. To execute the command in the built-in terminal or in the
   background.
 
 Instead of defining file type specific commands, you can also define commands
-for any file type by using '*' as the file type.
+for any file type by using `'*'` as the file type.
 
 
 Example:
