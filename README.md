@@ -27,10 +27,6 @@ Plug 'macthecadillac/external-tools.nvim'
   - [x] Terminal based commands
   - [x] Background commands
 
-- File type based commands
-  - [ ] Open documentation from the file type command (if the language supports
-    offline reading of such)
-
 - Other TODOs
   - [ ] Terminate non-terminal based commands
   - [ ] Process manager
