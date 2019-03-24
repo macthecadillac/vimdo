@@ -20,12 +20,12 @@ Plug 'macthecadillac/external-tools.nvim'
 ## Features
 
 - Command structure
-  - [x] Single command
-  - [ ] Composite commands
-  - [ ] File type based commands
-  - [ ] Non file type based commands
-  - [ ] Terminal based commands
-  - [ ] Background commands
+  - [ ] Default command
+  - [x] Composite commands
+  - [x] File type based commands
+  - [x] Non file type based commands
+  - [x] Terminal based commands
+  - [x] Background commands
 
 - File type based commands
   - [ ] Open documentation from the file type command (if the language supports
@@ -37,33 +37,51 @@ Plug 'macthecadillac/external-tools.nvim'
 
 ## Usage
 
-Set up hooks for different file types (see below). The command `FileTypeCmd`
-will execute the external command in the neovim built-in terminal. You can
-optionally register a key binding to invoke the command:
+Set up hooks for different file types (see below). The command `ExtCmd` will
+execute the external command. You can optionally register a key binding to
+invoke the command:
 
 ```vim
-autocmd FileType python nnoremap <buffer> <A-r> :FileTypeCmd<CR>
+autocmd ExtCmd python nnoremap <buffer> <A-r> :ExtCmd<CR>
+autocmd ExtCmd python nnoremap <buffer> <A-r> :ExtCmd run<CR>
 ```
 
 ## Configuration
 
 ### Global configuration options
 
-By far, the most important configuration option is the `g:external_tools#envs`
+By far, the most important configuration option is the `g:external_tools#cmds`
 option. This sets up hooks for each file type to external commands.
-`g:external_tools#envs` is a dictionary. The keys are the file types that neovim
-recognizes, and their associated value is a list, in which the first entry is
-the command to be executed in the built-in terminal, and the second a boolean
-that tells external-tools whether to pass the file name on to the external
-command.
+`g:external_tools#cmds` is a dictionary. The keys are the file types that neovim
+recognizes, and their associated values are dictionaries that associate file
+type specific commands with a dictionary with the following entries:
+
+- 'cmd': string. The command to be invoked
+- 'with_filename': 1 or 0. Whether to invoke the command with the file name.
+- 'in_term': 1 or 0. To execute the command in the built-in terminal or in the
+  background.
+
+Instead of defining file type specific commands, you can also define commands
+for any file type by using '*' as the file type.
+
 
 Example:
 
 ```vim
-let g:external_tools#envs = {
-      \ 'python': [$HOME . '/anaconda3/bin/python', 1],
-      \ 'tex': ['/usr/bin/latexmk -gg -silent', 1],
-      \ 'rust': ['cargo build', 0],
+let g:external_tools#cmds = {
+      \ '*': {
+      \     'update-ctags': 'ctags -R -h --exclude={.git,__pycache,__init__.py}', 'with_filename': 0, 'in_term': 0},
+      \   },
+      \ 'python': {
+      \     'run': {'cmd': '$HOME/anaconda3/bin/python', 'with_filename': 1, 'in_term': 1},
+      \     'backgroun-run': {'cmd': 'python3', 'with_filename': 1, 'in_term': 0},
+      \   },
+      \ 'tex': {
+      \     'compile': {'cmd': 'latexmk -gg -silent', 'with_filename': 1, 'in_term': 1},
+      \   },
+      \ 'rust': {
+      \     'build': {'cmd': 'cargo build', 'with_filename': 0, 'in_term': 1},
+      \   },
       \ }
 ```
 
