@@ -90,7 +90,7 @@ function! s:bg_job_exit(job_id, data, event) dict
 endfunction
 
 function! s:new_job(term)
-  let exit_func = a:term ==# 0 ? 's:bg_job_exit' : 's:term_job_exit'
+  let exit_func = a:term ? 's:term_job_exit' : 's:bg_job_exit'
   return {
         \ 'stdout': [],
         \ 'stderr': [],
@@ -100,48 +100,82 @@ function! s:new_job(term)
         \ }
 endfunction
 
+function! s:create_term_cmd(cmd)
+  let l:subcmd = a:cmd . ';'
+  " This is basically a shell script.
+  "   trap : INT catches Ctrl-C and enables to the command to exit gracefully
+  let l:cmd = '/bin/bash -c "' .
+        \ 'trap : INT;' .
+        \ l:subcmd .
+        \ 'printf \"' . g:external_tools#exit_message . '\"' .
+        \ ';read -p \"\""'
+  return l:cmd
+endfunction
+
+function! s:extract_cmd_opt(filetype, subcmd)
+  " file type specific commands trump catch-all commands
+  if has_key(g:external_tools#cmds, a:filetype) && has_key(g:external_tools#cmds, '*')
+    let l:ft_extcmds = g:external_tools#cmds[a:filetype]
+    let l:default_extcmds = g:external_tools#cmds['*']
+    if has_key(l:ft_extcmds, a:subcmd)
+      let l:cmdstr = l:ft_extcmds[a:subcmd]['cmd']
+      let l:with_filename = l:ft_extcmds[a:subcmd]['with_filename']
+      let l:in_term = l:ft_extcmds[a:subcmd]['in_term']
+    elseif has_key(l:default_extcmds, a:subcmd)
+      let l:cmdstr = l:default_extcmds[a:subcmd]['cmd']
+      let l:with_filename = l:default_extcmds[a:subcmd]['with_filename']
+      let l:in_term = l:default_extcmds[a:subcmd]['in_term']
+    endif
+  elseif has_key(g:external_tools#cmds, a:filetype)
+    let l:extcmds = g:external_tools#cmds[a:filetype]
+    if has_key(l:extcmds, a:subcmd)
+      let l:cmdstr = l:extcmds[a:subcmd]['cmd']
+      let l:with_filename = l:extcmds[a:subcmd]['with_filename']
+      let l:in_term = l:extcmds[a:subcmd]['in_term']
+    endif
+  elseif has_key(g:external_tools#cmds, '*')
+    let l:extcmds = g:external_tools#cmds['*']
+    if has_key(l:extcmds, a:subcmd)
+      let l:cmdstr = l:extcmds[a:subcmd]['cmd']
+      let l:with_filename = l:extcmds[a:subcmd]['with_filename']
+      let l:in_term = l:extcmds[a:subcmd]['in_term']
+    endif
+  endif
+
+  return [l:cmdstr, l:with_filename, l:in_term]
+endfunction
+
 function! external_tools#external_cmd(bang, ...)
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
   let l:filetype = &filetype
 
-  let l:cmd = get(g:external_tools#extcmds, a:1, [])
-  if l:cmd !=# ''
-    let l:job = s:new_job(0)
-    let l:job_id = jobstart(l:cmd, l:job)
-  endif
-endfunction
-
-function! external_tools#filetype_cmd()
-  let b:file_path = getcwd()
-  let l:filename = expand('%:f')
-  let l:filetype = &filetype
+  let subcmd = a:1
 
   call s:source_local_configuration()
 
-  if has_key(g:external_tools#envs, l:filetype)
-    let l:with_filename = g:external_tools#envs[l:filetype][1]
-    if l:with_filename
-      let l:executer = g:external_tools#envs[l:filetype][0]
-      let l:subcmd = l:executer . ' ' . l:filename . ';'
+  try
+    let l:cmd_opts = s:extract_cmd_opt(l:filetype, l:subcmd)
+    let l:cmdstr = l:cmd_opts[0]
+    let l:with_filename = l:cmd_opts[1]
+    let l:in_term = l:cmd_opts[2]
+
+    let l:cmd = l:with_filename ? l:cmdstr . ' ' . l:filename : l:cmdstr
+    let l:cmd = l:in_term ? s:create_term_cmd(l:cmd) : l:cmd
+
+    let l:job = s:new_job(l:in_term)
+    if l:in_term
+      call s:new_split()
+      let l:job_id = termopen(l:cmd, l:job)
+      call s:name_buffer(l:filename, l:with_filename)
+      let l:bufnr = bufnr('%')
+      let g:external_tools#jobs[l:job_id] = [l:job, l:bufnr]
     else
-      let l:subcmd = g:external_tools#envs[l:filetype][0] . ';'
+      let l:job_id = jobstart(l:cmd, l:job)
     endif
-
-    " This is basically a shell script.
-    "   trap : INT catches Ctrl-C and enables to the command to exit gracefully
-    let l:cmd = '/bin/bash -c "' .
-          \ 'trap : INT;' .
-          \ l:subcmd .
-          \ 'printf \"' . g:external_tools#exit_message . '\"' .
-          \ ';read -p \"\""'
-
-    let l:job = s:new_job(1)
-
-    call s:new_split()
-    let l:job_id = termopen(l:cmd, l:job)
-    call s:name_buffer(l:filename, l:with_filename)
-    let l:bufnr = bufnr('%')
-    let g:external_tools#jobs[l:job_id] = [l:job, l:bufnr]
-  endif
+  catch /l:cmdstr/
+    echohl ErrorMsg
+    echom 'Sub-command not defined. See :h external_tools.'
+    echohl NONE
+  endtry
 endfunction
