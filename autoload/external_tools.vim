@@ -75,7 +75,7 @@ function! s:job_stderr(job_id, data, event) dict
   let l:self.stderr = l:self.stderr + a:data
 endfunction
 
-function! s:job_exit(job_id, data, event) dict
+function! s:term_job_exit(job_id, data, event) dict
   let l:bufnr = g:external_tools#jobs[a:job_id][1]
   unlet g:external_tools#jobs[a:job_id]
   if g:external_tools#remove_term_buffer_when_done
@@ -85,10 +85,31 @@ function! s:job_exit(job_id, data, event) dict
   endif
 endfunction
 
-function! external_tools#external_cmd(bang, opts, args, ...)
+function! s:bg_job_exit(job_id, data, event) dict
+  " Do nothing
+endfunction
+
+function! s:new_job(term)
+  let exit_func = a:term ==# 0 ? 's:bg_job_exit' : 's:term_job_exit'
+  return {
+        \ 'stdout': [],
+        \ 'stderr': [],
+        \ 'on_stdout': function('s:job_stdout'),
+        \ 'on_stderr': function('s:job_stderr'),
+        \ 'on_exit': function(exit_func)
+        \ }
+endfunction
+
+function! external_tools#external_cmd(bang, ...)
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
   let l:filetype = &filetype
+
+  let l:cmd = get(g:external_tools#extcmds, a:1, [])
+  if l:cmd !=# ''
+    let l:job = s:new_job(0)
+    let l:job_id = jobstart(l:cmd, l:job)
+  endif
 endfunction
 
 function! external_tools#filetype_cmd()
@@ -98,15 +119,15 @@ function! external_tools#filetype_cmd()
 
   call s:source_local_configuration()
 
-  let l:with_filename = g:external_tools#envs[l:filetype][1]
-  if l:with_filename
-    let l:executer = g:external_tools#envs[l:filetype][0]
-    let l:subcmd = l:executer . ' ' . l:filename . ';'
-  else
-    let l:subcmd = g:external_tools#envs[l:filetype][0] . ';'
-  endif
-
   if has_key(g:external_tools#envs, l:filetype)
+    let l:with_filename = g:external_tools#envs[l:filetype][1]
+    if l:with_filename
+      let l:executer = g:external_tools#envs[l:filetype][0]
+      let l:subcmd = l:executer . ' ' . l:filename . ';'
+    else
+      let l:subcmd = g:external_tools#envs[l:filetype][0] . ';'
+    endif
+
     " This is basically a shell script.
     "   trap : INT catches Ctrl-C and enables to the command to exit gracefully
     let l:cmd = '/bin/bash -c "' .
@@ -114,13 +135,8 @@ function! external_tools#filetype_cmd()
           \ l:subcmd .
           \ 'printf \"' . g:external_tools#exit_message . '\"' .
           \ ';read -p \"\""'
-    let l:job = {
-          \ 'stdout': [],
-          \ 'stderr': [],
-          \ 'on_stdout': function('s:job_stdout'),
-          \ 'on_stderr': function('s:job_stderr'),
-          \ 'on_exit': function('s:job_exit')
-          \ }
+
+    let l:job = s:new_job(1)
 
     call s:new_split()
     let l:job_id = termopen(l:cmd, l:job)
