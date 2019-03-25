@@ -17,10 +17,9 @@ Add the following line to your `init.vim`
 Plug 'macthecadillac/external-tools.nvim'
 ```
 
-## Features
+## TODOS
 
 - Command structure
-  - [ ] Default command
   - [x] Composite commands
   - [x] File type based commands
   - [x] Non file type based commands
@@ -49,10 +48,12 @@ The following commands are made available:
 ### Global configuration options
 
 By far, the most important configuration option is the `g:external_tools#cmds`
-option. This sets up hooks for each file type to external commands.
-`g:external_tools#cmds` is a dictionary. The keys are the file types that neovim
-recognizes, and their associated values are dictionaries that associate file
-type specific commands with a dictionary with the following entries:
+option. This sets up hooks for each file type to external commands. This is
+setting is necessary for the plugin to work since this plugin comes with no
+preset out of the box.  `g:external_tools#cmds` is a dictionary. The keys are
+the file types that neovim recognizes, and their associated values are
+dictionaries that associate file type specific commands with a dictionary with
+the following entries:
 
 - `cmd`: string. The command to be invoked
 - `with_filename`: 1 or 0. Whether to invoke the command with the file name.
@@ -72,13 +73,16 @@ let g:external_tools#cmds = {
       \   },
       \ 'python': {
       \     'run': {'cmd': '$HOME/anaconda3/bin/python', 'with_filename': 1, 'in_term': 1},
-      \     'backgroun-run': {'cmd': 'python3', 'with_filename': 1, 'in_term': 0},
+      \     'backgroun-run': {'cmd': '$HOME/anaconda3/bin/python', 'with_filename': 1, 'in_term': 0},
       \   },
       \ 'tex': {
-      \     'compile': {'cmd': 'latexmk -gg -silent', 'with_filename': 1, 'in_term': 1},
+      \     'build': {'cmd': 'latexmk -silent', 'with_filename': 1, 'in_term': 1},
+      \     'continuous-build': {'cmd': 'latexmk -pvc -interaction=nonstopmode', 'with_filename': 1, 'in_term': 0},
       \   },
       \ 'rust': {
-      \     'build': {'cmd': 'cargo build', 'with_filename': 0, 'in_term': 1},
+      \     'run': {'cmd': 'cargo run', 'with_filename': 0, 'in_term': 1},
+      \     'quick-build': {'cmd': 'cargo build', 'with_filename': 0, 'in_term': 1},
+      \     'release-build': {'cmd': 'cargo build --release', 'with_filename': 0, 'in_term': 1},
       \   },
       \ }
 ```
