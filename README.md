@@ -36,9 +36,9 @@ Plug 'macthecadillac/external-tools.nvim'
 The following commands are made available:
 - `ExtCmd <cmd>` where `<cmd>` is the sub-command you defined (see configuration
   section below). This will execute the command you provided.
-- `ExtCmdListCmds`: This lists all the defined sub-commands available for
+- `ExtCmdList`: This lists all the defined sub-commands available for
   current file type
-- `ExtCmdListProcs`: This lists all background processes you launched through
+- `ExtCmdProcs`: This lists all background processes you launched through
   `ExtCmd` (those that run not in the terminal but in the background)
 - `ExtCmdStop #` where `#` is the process number listed by `ExtCmdListProcs`.
   This will terminate the process with that process number.

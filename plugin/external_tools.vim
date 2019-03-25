@@ -12,6 +12,6 @@ let g:external_tools#remove_term_buffer_when_done = get(g:, 'external_tools#remo
 let g:external_tools#cmds = get(g:, 'external_tools#cmds', {})
 
 command! -nargs=1 ExtCmd call external_tools#call(<f-args>)
-command! ExtCmdListProcs call external_tools#list_background_processes()
+command! ExtCmdProcs call external_tools#list_background_processes()
 command! -nargs=1 ExtCmdStop call external_tools#stop_process(<f-args>)
-command! ExtCmdListCmds call external_tools#list_commands()
+command! ExtCmdList call external_tools#list_commands()
