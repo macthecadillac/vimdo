@@ -34,8 +34,15 @@ Plug 'macthecadillac/external-tools.nvim'
 
 ## Usage
 
-Set up hooks for different file types (see below). The command `ExtCmd cmd` will
-execute the external command associated with `cmd`.
+The following commands are made available:
+- `ExtCmd <cmd>` where `cmd` is the sub-command you defined (see configuration
+  section below). This will execute the command you provided.
+- `ExtCmdListCmds`: This lists all the defined sub-commands available for
+  current file type
+- `ExtCmdListProcs`: This lists all background processes you launched through
+  `ExtCmd` (those that run not in the terminal but in the background)
+- `ExtCmdStop #` where `#` is the process number listed by `ExtCmdListProcs`.
+  This will terminate the process with that process number.
 
 ## Configuration
 
