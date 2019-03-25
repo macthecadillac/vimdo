@@ -51,14 +51,14 @@ endfunction
 
 function! s:name_buffer(filename, with_filename)
     let l:bufnr = 0
-    let l:bufname = a:with_filename ? 'FileTypeCmd: ' . a:filename : 'FileTypeCmd'
+    let l:bufname = a:with_filename ? 'ExtCmd: ' . a:filename : 'ExtCmd'
 
     while bufname(l:bufname) ==# l:bufname
       let l:bufnr = l:bufnr + 1
       if a:with_filename
-        let l:bufname = 'FileTypeCmd: ' . a:filename . ' (' . l:bufnr . ')'
+        let l:bufname = 'ExtCmd: ' . a:filename . ' (' . l:bufnr . ')'
       else
-        let l:bufname = 'FileTypeCmd (' . l:bufnr . ')'
+        let l:bufname = 'ExtCmd (' . l:bufnr . ')'
       endif
     endwhile
 
