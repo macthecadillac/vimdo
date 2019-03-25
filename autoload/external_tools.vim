@@ -74,7 +74,7 @@ function! s:job_stderr(job_id, data, event) dict
 endfunction
 
 function! s:term_job_exit(job_id, data, event) dict
-  let l:bufnr = g:external_tools#jobs[a:job_id][1]
+  let l:bufnr = g:external_tools#terminal_jobs[a:job_id][1]
   unlet g:external_tools#terminal_jobs[a:job_id]
   if g:external_tools#remove_term_buffer_when_done
     execute 'bd! ' . l:bufnr
@@ -113,31 +113,18 @@ endfunction
 function! s:extract_cmd_opt(filetype, subcmd)
   " file type specific commands trump catch-all commands
   if has_key(g:external_tools#cmds, a:filetype) && has_key(g:external_tools#cmds, '*')
-    let l:ft_extcmds = g:external_tools#cmds[a:filetype]
-    let l:default_extcmds = g:external_tools#cmds['*']
-    if has_key(l:ft_extcmds, a:subcmd)
-      let l:cmdstr = l:ft_extcmds[a:subcmd]['cmd']
-      let l:with_filename = l:ft_extcmds[a:subcmd]['with_filename']
-      let l:in_term = l:ft_extcmds[a:subcmd]['in_term']
-    elseif has_key(l:default_extcmds, a:subcmd)
-      let l:cmdstr = l:default_extcmds[a:subcmd]['cmd']
-      let l:with_filename = l:default_extcmds[a:subcmd]['with_filename']
-      let l:in_term = l:default_extcmds[a:subcmd]['in_term']
-    endif
+    let l:extcmds = extend(deepcopy(g:external_tools#cmds['*']),
+                           g:external_tools#cmds[l:filetype])
   elseif has_key(g:external_tools#cmds, a:filetype)
     let l:extcmds = g:external_tools#cmds[a:filetype]
-    if has_key(l:extcmds, a:subcmd)
-      let l:cmdstr = l:extcmds[a:subcmd]['cmd']
-      let l:with_filename = l:extcmds[a:subcmd]['with_filename']
-      let l:in_term = l:extcmds[a:subcmd]['in_term']
-    endif
   elseif has_key(g:external_tools#cmds, '*')
     let l:extcmds = g:external_tools#cmds['*']
-    if has_key(l:extcmds, a:subcmd)
-      let l:cmdstr = l:extcmds[a:subcmd]['cmd']
-      let l:with_filename = l:extcmds[a:subcmd]['with_filename']
-      let l:in_term = l:extcmds[a:subcmd]['in_term']
-    endif
+  endif
+
+  if has_key(l:extcmds, a:subcmd)
+    let l:cmdstr = l:extcmds[a:subcmd]['cmd']
+    let l:with_filename = l:extcmds[a:subcmd]['with_filename']
+    let l:in_term = l:extcmds[a:subcmd]['in_term']
   endif
 
   return [l:cmdstr, l:with_filename, l:in_term]
@@ -177,6 +164,28 @@ function! external_tools#call(subcmd)
   endtry
 endfunction
 
+" List all currently defined commands for this file type
+function! external_tools#list_commands()
+  let l:filetype = &filetype
+  if has_key(g:external_tools#cmds, l:filetype) && has_key(g:external_tools#cmds, '*')
+    let l:cmds = extend(deepcopy(g:external_tools#cmds['*']),
+                        g:external_tools#cmds[l:filetype])
+    for cmd in keys(l:cmds)
+      echom '  ' . cmd
+    endfor
+  elseif has_key(g:external_tools#cmds, l:filetype)
+    for cmd in keys(g:external_tools#cmds[l:filetype])
+      echom '  ' . cmd
+    endfor
+  elseif has_key(g:external_tools#cmds, '*')
+    for cmd in keys(g:external_tools#cmds['*'])
+      echom '  ' . cmd
+    endfor
+  else
+    echom 'No command is defined for the current file type'
+  endif
+endfunction
+
 " TODO: Make output adapt to job-id length
 function! external_tools#list_background_processes()
   if g:external_tools#background_jobs !=# {}
@@ -193,7 +202,7 @@ endfunction
 
 function! external_tools#stop_process(job_id)
   if has_key(g:external_tools#background_jobs, a:job_id)
-    call jobstop(a:job_id)
+    call jobstop(str2nr(a:job_id))
   else
     echom 'No matching process found'
   endif
