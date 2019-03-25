@@ -35,7 +35,7 @@ Plug 'macthecadillac/external-tools.nvim'
 ## Usage
 
 The following commands are made available:
-- `ExtCmd <cmd>` where `cmd` is the sub-command you defined (see configuration
+- `ExtCmd <cmd>` where `<cmd>` is the sub-command you defined (see configuration
   section below). This will execute the command you provided.
 - `ExtCmdListCmds`: This lists all the defined sub-commands available for
   current file type
