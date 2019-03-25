@@ -29,8 +29,8 @@ Plug 'macthecadillac/external-tools.nvim'
 
 - Other TODOs
   - [ ] Write documentation
-  - [ ] Terminate non-terminal based commands
-  - [ ] Process manager
+  - [x] List available commands
+  - [x] Process manager/Terminate commands
 
 ## Usage
 
