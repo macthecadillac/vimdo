@@ -170,14 +170,17 @@ function! external_tools#list_commands()
   if has_key(g:external_tools#cmds, l:filetype) && has_key(g:external_tools#cmds, '*')
     let l:cmds = extend(deepcopy(g:external_tools#cmds['*']),
                         g:external_tools#cmds[l:filetype])
+    echom ':ExtCmdListCmds'
     for cmd in keys(l:cmds)
       echom '  ' . cmd
     endfor
   elseif has_key(g:external_tools#cmds, l:filetype)
+    echom ':ExtCmdListCmds'
     for cmd in keys(g:external_tools#cmds[l:filetype])
       echom '  ' . cmd
     endfor
   elseif has_key(g:external_tools#cmds, '*')
+    echom ':ExtCmdListCmds'
     for cmd in keys(g:external_tools#cmds['*'])
       echom '  ' . cmd
     endfor
@@ -189,6 +192,7 @@ endfunction
 " TODO: Make output adapt to job-id length
 function! external_tools#list_background_processes()
   if g:external_tools#background_jobs !=# {}
+    echom ':ExtCmdListProcs'
     echom '  #   Command'
     for l:proc in items(g:external_tools#background_jobs)
       let l:job_id = l:proc[0]
