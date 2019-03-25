@@ -1,5 +1,3 @@
-" TODO: make composite commands out of configuration files
-
 " We define the root directory as the one that contains the git folder
 function! s:find_root()
   if globpath('.', '.git') ==# './.git'
@@ -16,7 +14,7 @@ function! s:find_root()
   endif
 endfunction
 
-" Find local environmental configuration and overwrites the system-wide
+" Find local environmental configuration and overwrite the system-wide
 " configuration, if any
 function! s:source_local_configuration()
   if filereadable('./.external_tools.vim')
@@ -77,7 +75,7 @@ endfunction
 
 function! s:term_job_exit(job_id, data, event) dict
   let l:bufnr = g:external_tools#jobs[a:job_id][1]
-  unlet g:external_tools#jobs[a:job_id]
+  unlet g:external_tools#terminal_jobs[a:job_id]
   if g:external_tools#remove_term_buffer_when_done
     execute 'bd! ' . l:bufnr
   else
@@ -86,7 +84,7 @@ function! s:term_job_exit(job_id, data, event) dict
 endfunction
 
 function! s:bg_job_exit(job_id, data, event) dict
-  " Do nothing
+  unlet g:external_tools#background_jobs[a:job_id]
 endfunction
 
 function! s:new_job(term)
@@ -145,17 +143,15 @@ function! s:extract_cmd_opt(filetype, subcmd)
   return [l:cmdstr, l:with_filename, l:in_term]
 endfunction
 
-function! external_tools#external_cmd(bang, ...)
+function! external_tools#call(subcmd)
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
   let l:filetype = &filetype
 
-  let subcmd = a:1
-
   call s:source_local_configuration()
 
   try
-    let l:cmd_opts = s:extract_cmd_opt(l:filetype, l:subcmd)
+    let l:cmd_opts = s:extract_cmd_opt(l:filetype, a:subcmd)
     let l:cmdstr = l:cmd_opts[0]
     let l:with_filename = l:cmd_opts[1]
     let l:in_term = l:cmd_opts[2]
@@ -169,13 +165,36 @@ function! external_tools#external_cmd(bang, ...)
       let l:job_id = termopen(l:cmd, l:job)
       call s:name_buffer(l:filename, l:with_filename)
       let l:bufnr = bufnr('%')
-      let g:external_tools#jobs[l:job_id] = [l:job, l:bufnr]
+      let g:external_tools#terminal_jobs[l:job_id] = [l:job, l:bufnr]
     else
       let l:job_id = jobstart(l:cmd, l:job)
+      let g:external_tools#background_jobs[l:job_id] = [a:subcmd, l:job]
     endif
   catch /l:cmdstr/
     echohl ErrorMsg
-    echom 'Sub-command not defined.'
+    echom 'Command not defined.'
     echohl NONE
   endtry
+endfunction
+
+" TODO: Make output adapt to job-id length
+function! external_tools#list_background_processes()
+  if g:external_tools#background_jobs !=# {}
+    echom '  #   Command'
+    for l:proc in items(g:external_tools#background_jobs)
+      let l:job_id = l:proc[0]
+      let l:cmd = l:proc[1][0]
+      echom '  ' . l:job_id . '   ' . l:cmd
+    endfor
+  else
+    echom 'Nothing to show'
+  endif
+endfunction
+
+function! external_tools#stop_process(job_id)
+  if has_key(g:external_tools#background_jobs, a:job_id)
+    call jobstop(a:job_id)
+  else
+    echom 'No matching process found'
+  endif
 endfunction
