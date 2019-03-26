@@ -27,6 +27,7 @@ Plug 'macthecadillac/external-tools.nvim'
   - [x] Background commands
 
 - Other TODOs
+  - [ ] Perhaps integration with quickfix/location list
   - [ ] Write documentation
   - [x] List available commands
   - [x] Process manager/Terminate commands
