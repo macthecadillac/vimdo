@@ -37,11 +37,11 @@ dictionary must contain keys (as |string|s) that are vim |filetype|s. The value
 of the each entry is another |dictionary| that contains the following three
 entries:
 
-  `cmd`              *string* The command to be invoked
-  `with_filename`    *boolean* Supply the command with the file name (append to
+  `cmd`              |string| The command to be invoked
+  `with_filename`    |boolean| Supply the command with the file name (append to
                    the command) if set to 1, run the command without the file
                    name if set to 0.
-  `in_term`          *boolean* Run the command in the terminal if set to 1, run
+  `in_term`          |boolean| Run the command in the terminal if set to 1, run
                    in the background if set to 0.
 
 Instead of being specific file types, the first level keys could optionally be
