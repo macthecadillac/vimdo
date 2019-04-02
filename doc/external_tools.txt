@@ -1,0 +1,144 @@
+*external_tools*
+
+A configurable plugin to run external commands in the built-in terminal based on
+file type.
+
+--------------------------------------------------------------------------------
+1. Commands
+
+*ExtCmd*        - `ExtCmd {cmd}` where `cmd` is the sub-command you defined
+                (see |g:external_tools#cmds| below). This will execute the
+                command you configured.
+*ExtCmdList*    - List all the defined sub-commands available for the current
+                file type
+*ExtCmdProcs*   - List all background processes launched through |ExtCmd|
+                (those that run not in the terminal but in the background)
+*ExtCmdStop*    - Terminate process with the provided process number.
+                `ExtCmdStop {#}` where `#` is the process number listed by
+                |ExtCmdListProcs|.
+
+
+--------------------------------------------------------------------------------
+2. Configurations
+
+Configuration could be global or local. Global configuration resides in your
+`init.vim` whereas local configurations are located in `.external_tools.vim` in
+your local directory, either in the same folder as the file to be edited or in
+the root of the `git` repository. Local configurations, if found, always have
+precedence over global configurations. The configuration options that are
+covered in the following are applicable to both global and local
+configurations.
+
+
+g:external_tools#cmds                                    *g:external_tools#cmds*
+
+This is a |dictionary| that maps |ExtCmd| commands to shell commands. The
+dictionary must contain keys (as |string|s) that are vim |filetype|s. The value
+of the each entry is another |dictionary| that contains the following three
+entries:
+
+  `cmd`              *string* The command to be invoked
+  `with_filename`    *boolean* Supply the command with the file name (append to
+                   the command) if set to 1, run the command with out the file
+                   name if set to 0.
+  `in_term`          *boolean* Run the command in the terminal if set to 1, run
+                   in the background if set to 0.
+
+Instead of being specific file types, the first level keys could optionally be
+a wildcard, in this case `'*'` that serves as a catch-all and the command will
+henceforth be defined for all file types. Notice that file type specific
+commands will override catch-all commands if conflicts arise.
+
+Example: >
+
+  let g:external_tools#cmds = {
+        \ '*': {
+        \     'update-ctags': 'ctags -R -h --exclude={.git,__pycache,__init__.py}',
+        \     'with_filename': 0,
+        \     'in_term': 0},
+        \   },
+        \ 'python': {
+        \     'run': {
+        \       'cmd': '$HOME/anaconda3/bin/python',
+        \       'with_filename': 1,
+        \       'in_term': 1
+        \     },
+        \     'background-run': {
+        \       'cmd': '$HOME/anaconda3/bin/python',
+        \       'with_filename': 1,
+        \       'in_term': 0
+        \     },
+        \   },
+        \ 'tex': {
+        \     'build': {
+        \       'cmd': 'latexmk -silent',
+        \       'with_filename': 1,
+        \       'in_term': 1
+        \     },
+        \     'continuous-build': {
+        \       'cmd': 'latexmk -pvc -interaction=nonstopmode',
+        \       'with_filename': 1,
+        \       'in_term': 0
+        \     },
+        \   },
+        \ 'rust': {
+        \     'run': {'cmd': 'cargo run', 'with_filename': 0, 'in_term': 1},
+        \     'quick-build': {
+        \       'cmd': 'cargo build',
+        \       'with_filename': 0,
+        \       'in_term': 1
+        \     },
+        \     'release-build': {
+        \       'cmd': 'cargo build --release',
+        \       'with_filename': 0,
+        \       'in_term': 1
+        \     },
+        \   },
+        \ }
+<
+
+g:external_tools#split_direction              *g:external_tools#split_direction*
+
+  Type: |string|
+  Default: `'down'`
+  
+  For terminal commands, this option determines the direction in which the
+  terminal split should be opened. Available options are `'up'`, `'down'`,
+  `'left'`, `'right'`.
+
+
+g:external_tools#exit_message                    *g:external_tools#exit_message*
+
+  Type: |string|
+  Default: `'\n-------------------------\nPress ENTER to exit'`
+
+  This option sets the text to be printed to the terminal at the termination of
+  a terminal command.
+
+
+g:external_tools#term_height                      *g:external_tools#term_height*
+
+  Type: |integer|
+  Default: `15`
+
+  For terminal commands, this option sets the height of the terminal split (if
+  |g:external_tools#split_direction| is set to `'up'` or `'down'`).
+
+
+g:external_tools#term_width                        *g:external_tools#term_width*
+
+  Type: |integer|
+  Default: `79`
+
+  For terminal commands, this option sets the width of the terminal split (if
+  |g:external_tools#split_direction| is set to `'left'` or `'right'`).
+
+
+                                 *g:external_tools#remove_term_buffer_when_done*
+g:external_tools#remove_term_buffer_when_done
+
+  Type: |boolean|
+  Default: `1`
+
+  For terminal commands, this option determines whether the buffer in which the
+  terminal was run should be discarded when the command exits.
