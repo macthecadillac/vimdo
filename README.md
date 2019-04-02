@@ -28,7 +28,7 @@ Plug 'macthecadillac/external-tools.nvim'
 
 - Other TODOs
   - [ ] Perhaps integration with quickfix/location list
-  - [ ] Write documentation
+  - [x] Write documentation
   - [ ] Error handling for failed background commands (show a simple message and perhaps redirect output from `stderr` to a temporary buffer and display)
   - [x] List available commands
   - [x] Process manager/Terminate commands
