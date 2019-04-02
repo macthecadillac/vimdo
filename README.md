@@ -36,79 +36,98 @@ Plug 'macthecadillac/external-tools.nvim'
 ## Usage
 
 The following commands are made available:
-- `ExtCmd <cmd>` where `<cmd>` is the sub-command you defined (see configuration
-  section below). This will execute the command you provided.
-- `ExtCmdList`: This lists all the defined sub-commands available for
-  current file type
-- `ExtCmdProcs`: This lists all background processes you launched through
-  `ExtCmd` (those that run not in the terminal but in the background)
-- `ExtCmdStop #` where `#` is the process number listed by `ExtCmdListProcs`.
-  This will terminate the process with that process number.
 
-## Configuration
+`ExtCmd`: `ExtCmd {cmd}` where `cmd` is the sub-command you defined (see the
+section below). This will execute the command you configured.
 
-### Global configuration options
+`ExtCmdList`: List all the defined sub-commands available for the current file
+type
 
-By far, the most important configuration option is the `g:external_tools#cmds`
-option. This sets up hooks for each file type to external commands. This is
-setting is necessary for the plugin to work since this plugin comes with no
-preset out of the box.  `g:external_tools#cmds` is a dictionary. The keys are
-the file types that neovim recognizes, and their associated values are
-dictionaries that associate file type specific commands with a dictionary with
-the following entries:
+`ExtCmdProcs`: List all background processes launched through `ExtCmd`
+(those that run not in the terminal but in the background)
 
-- `cmd`: string. The command to be invoked
-- `with_filename`: 1 or 0. Whether to invoke the command with the file name.
-- `in_term`: 1 or 0. To execute the command in the built-in terminal or in the
-  background.
+`ExtCmdStop`: Terminate process with the provided process number.  `ExtCmdStop
+{#}` where `#` is the process number listed by `ExtCmdListProcs`.
 
-Instead of defining file type specific commands, you can also define commands
-for any file type by using `'*'` as the file type.
+## Setting up
 
+Configuration could be global or local. Global configurations reside in your
+`init.vim` whereas local configurations are located in `.external_tools.vim` in
+your local directory, either in the same folder as the file to be edited or in
+the root of the `git` repository. Local configurations, if found, always have
+precedence over global configurations. The configuration options that are
+covered in the following are applicable to both global and local
+configurations.
+
+### Hooks to shell commands
+
+All hooks reside in `g:external_tools#cmds`. It is a dictionary that maps
+`ExtCmd` sub-commands to shell commands. The dictionary must contain keys (as
+`string`'s) that are vim `filetype`'s. The value of the each entry is another
+dictionary that contains the following three entries:
+
+  - `cmd`: `string` The command to be invoked
+  - `with_filename`: `boolean` Supply the command with the file name (append to
+    the command) if set to `1`, run the command without the file name if set to
+    `0`.
+  - `in_term`: `boolean` Run the command in the terminal if set to `1`, run in the
+    background if set to `0`.
+
+Instead of being specific file types, the first level keys could optionally be
+a wildcard, in this case `*` that serves as a catch-all and the command will
+henceforth be defined for all file types. Notice that file type specific
+commands will override catch-all commands if conflicts arise.
 
 Example:
 
 ```vim
 let g:external_tools#cmds = {
       \ '*': {
-      \     'update-ctags': 'ctags -R -h --exclude={.git,__pycache,__init__.py}', 'with_filename': 0, 'in_term': 0},
+      \     'update-ctags': 'ctags -R -h --exclude={.git,__pycache,__init__.py}',
+      \     'with_filename': 0,
+      \     'in_term': 0},
       \   },
       \ 'python': {
-      \     'run': {'cmd': '$HOME/anaconda3/bin/python', 'with_filename': 1, 'in_term': 1},
-      \     'backgroun-run': {'cmd': '$HOME/anaconda3/bin/python', 'with_filename': 1, 'in_term': 0},
+      \     'run': {
+      \       'cmd': '$HOME/anaconda3/bin/python',
+      \       'with_filename': 1,
+      \       'in_term': 1
+      \     },
+      \     'background-run': {
+      \       'cmd': '$HOME/anaconda3/bin/python',
+      \       'with_filename': 1,
+      \       'in_term': 0
+      \     },
       \   },
       \ 'tex': {
-      \     'build': {'cmd': 'latexmk -silent', 'with_filename': 1, 'in_term': 1},
-      \     'continuous-build': {'cmd': 'latexmk -pvc -interaction=nonstopmode', 'with_filename': 1, 'in_term': 0},
+      \     'build': {
+      \       'cmd': 'latexmk -silent',
+      \       'with_filename': 1,
+      \       'in_term': 1
+      \     },
+      \     'continuous-build': {
+      \       'cmd': 'latexmk -pvc -interaction=nonstopmode',
+      \       'with_filename': 1,
+      \       'in_term': 0
+      \     },
       \   },
       \ 'rust': {
       \     'run': {'cmd': 'cargo run', 'with_filename': 0, 'in_term': 1},
-      \     'quick-build': {'cmd': 'cargo build', 'with_filename': 0, 'in_term': 1},
-      \     'release-build': {'cmd': 'cargo build --release', 'with_filename': 0, 'in_term': 1},
+      \     'quick-build': {
+      \       'cmd': 'cargo build',
+      \       'with_filename': 0,
+      \       'in_term': 1
+      \     },
+      \     'release-build': {
+      \       'cmd': 'cargo build --release',
+      \       'with_filename': 0,
+      \       'in_term': 1
+      \     },
       \   },
       \ }
 ```
 
-Additional options should be quite self-explanatory. Shown here are their
-default values.
-
-```vim
-" Available directions are 'up', 'down', 'left' and 'right'.
-let g:external_tools#split_direction = 'down'
-let g:external_tools#exit_message = '\n-------------------------\nPress ENTER to exit'
-let g:external_tools#term_height = 15
-let g:external_tools#term_width = 79
-let g:external_tools#remove_term_buffer_when_done = 1
-```
-
-### Local Configurations
-
-Local configuration lets you tailor the behavior of the extension to specific
-projects. The configuration works the same way it does for global
-configurations, except that the configurations reside in `.external_tools.vim`
-in the local directory or the root of your git project. External-tools will pick
-up your local configurations and override the global settings (if any) with
-them.
+For further configuration options, please refer to the documentation.
 
 ## License
 
