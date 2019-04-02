@@ -21,7 +21,7 @@ file type.
 --------------------------------------------------------------------------------
 2. Configurations
 
-Configuration could be global or local. Global configuration resides in your
+Configuration could be global or local. Global configurations reside in your
 `init.vim` whereas local configurations are located in `.external_tools.vim` in
 your local directory, either in the same folder as the file to be edited or in
 the root of the `git` repository. Local configurations, if found, always have
@@ -32,14 +32,14 @@ configurations.
 
 g:external_tools#cmds                                    *g:external_tools#cmds*
 
-This is a |dictionary| that maps |ExtCmd| commands to shell commands. The
+This is a |dictionary| that maps |ExtCmd| sub-commands to shell commands. The
 dictionary must contain keys (as |string|s) that are vim |filetype|s. The value
 of the each entry is another |dictionary| that contains the following three
 entries:
 
   `cmd`              *string* The command to be invoked
   `with_filename`    *boolean* Supply the command with the file name (append to
-                   the command) if set to 1, run the command with out the file
+                   the command) if set to 1, run the command without the file
                    name if set to 0.
   `in_term`          *boolean* Run the command in the terminal if set to 1, run
                    in the background if set to 0.
