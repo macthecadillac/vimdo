@@ -71,10 +71,10 @@ dictionary that contains the following three entries:
   - `in_term`: `boolean` Run the command in the terminal if set to `1`, run in the
     background if set to `0`.
 
-Instead of being specific file types, the first level keys could optionally be
-a wildcard, in this case `*` that serves as a catch-all and the command will
-henceforth be defined for all file types. Notice that file type specific
-commands will override catch-all commands if conflicts arise.
+Instead of being specific file types, the first level keys could optionally be a
+wildcard, in this case `*` that serves as a catch-all, and all its commands will
+be available for all file types. Notice that file type specific commands will
+override catch-all commands if conflicts arise.
 
 Example:
 
