@@ -55,9 +55,7 @@ Configuration could be global or local. Global configurations reside in your
 `init.vim` whereas local configurations are located in `.external_tools.vim` in
 your local directory, either in the same folder as the file to be edited or in
 the root of the `git` repository. Local configurations, if found, always have
-precedence over global configurations. The configuration options that are
-covered in the following are applicable to both global and local
-configurations.
+precedence over global configurations.
 
 ### Hooks to shell commands
 
