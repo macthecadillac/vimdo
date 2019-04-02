@@ -81,9 +81,11 @@ Example:
 ```vim
 let g:external_tools#cmds = {
       \ '*': {
-      \     'update-ctags': 'ctags -R -h --exclude={.git,__pycache,__init__.py}',
-      \     'with_filename': 0,
-      \     'in_term': 0},
+      \     'update-ctags': {
+      \       'cmd': 'ctags -R -h --exclude={.git,__pycache,__init__.py}',
+      \       'with_filename': 0,
+      \       'in_term': 0
+      \     },
       \   },
       \ 'python': {
       \     'run': {
