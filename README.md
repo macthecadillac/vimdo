@@ -19,8 +19,8 @@ Plug 'macthecadillac/external-tools.nvim'
 
 ## TODOS
 
-- Command structure
-  - [x] Composite commands
+- Main features
+  - [x] Configurable commands (using a dictionary)
   - [x] File type based commands
   - [x] Non file type based commands
   - [x] Terminal based commands
@@ -30,6 +30,7 @@ Plug 'macthecadillac/external-tools.nvim'
   - [ ] Perhaps integration with quickfix/location list
   - [x] Write documentation
   - [ ] Error handling for failed background commands (show a simple message and perhaps redirect output from `stderr` to a temporary buffer and display)
+  - [ ] Command auto-completion (if possible)
   - [x] List available commands
   - [x] Process manager/Terminate commands
 
@@ -49,13 +50,13 @@ type
 `ExtCmdStop`: Terminate process with the provided process number.  `ExtCmdStop
 {#}` where `#` is the process number listed by `ExtCmdListProcs`.
 
-## Setting up
+## Configuration
 
-Configuration could be global or local. Global configurations reside in your
-`init.vim` whereas local configurations are located in `.external_tools.vim` in
-your local directory, either in the same folder as the file to be edited or in
-the root of the `git` repository. Local configurations, if found, always have
-precedence over global configurations.
+Configurations can be global or local. Global configurations reside in your
+`init.vim` whereas local configurations live in `.external_tools.vim` in your
+local directory (either in the same folder as the file in buffer or in the root
+of the `git` repository). Local configurations, if found, always have precedence
+over global configurations.
 
 ### Hooks to shell commands
 
