@@ -35,7 +35,7 @@ Plug 'macthecadillac/axe'
   - [ ] Perhaps integration with quickfix/location list
   - [ ] Ad-hoc commands
   - [x] Make all options under `g:axe#cmds` outside of `cmd` optional (give them defaults, that is)
-  - [ ] Add option `g:axe#cmds.exe_in_proj_root`
+  - [x] Add option `g:axe#cmds.exe_in_proj_root`
   - [x] Write documentation
   - [ ] Notify successful termination/completion of background command
   - [ ] Better error handling for failed background commands (show a simple message and perhaps redirect output from `stderr` to a temporary buffer and display)

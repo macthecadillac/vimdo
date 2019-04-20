@@ -133,8 +133,11 @@ function! s:extract_cmd_opt(filetype, subcmd)
   if has_key(l:extcmds, a:subcmd)
     try
       let l:cmdstr = l:extcmds[a:subcmd]['cmd']
-      let l:with_filename = get(l:extcmds[a:subcmd], 'with_filename', s:default('with_filename'))
       let l:in_term = get(l:extcmds[a:subcmd], 'in_term', s:default('in_term'))
+      let l:with_filename = get(l:extcmds[a:subcmd], 'with_filename',
+            \                   s:default('with_filename'))
+      let l:exe_in_proj_root = get(l:extcmds[a:subcmd], 'exe_in_proj_root',
+            \                      s:default('exe_in_proj_root'))
     catch /Key not present in Dictionary: cmd/
       echohl ErrorMsg
       echom 'Invalid configuration entry.'
@@ -142,7 +145,7 @@ function! s:extract_cmd_opt(filetype, subcmd)
     endtry
   endif
 
-  return [l:cmdstr, l:with_filename, l:in_term]
+  return [l:cmdstr, l:with_filename, l:in_term, l:exe_in_proj_root]
 endfunction
 
 function! axe#call(subcmd)
@@ -157,9 +160,14 @@ function! axe#call(subcmd)
     let l:cmdstr = l:cmd_opts[0]
     let l:with_filename = l:cmd_opts[1]
     let l:in_term = l:cmd_opts[2]
+    let l:exe_in_proj_root = l:cmd_opts[3]
 
     let l:cmd = l:with_filename ? l:cmdstr . ' ' . l:filename : l:cmdstr
     let l:cmd = l:in_term ? s:create_term_cmd(l:cmd) : l:cmd
+
+    if l:exe_in_proj_root
+      execute 'cd' s:find_root()
+    endif
 
     let l:job = s:new_job(l:in_term)
     if l:in_term
@@ -171,6 +179,10 @@ function! axe#call(subcmd)
     else
       let l:job_id = jobstart(l:cmd, l:job)
       let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
+    endif
+
+    if l:exe_in_proj_root
+      execute 'cd' b:file_path
     endif
   catch /l:cmdstr/
     echohl ErrorMsg
