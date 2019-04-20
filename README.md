@@ -31,12 +31,13 @@ Plug 'macthecadillac/axe'
   - [x] Background commands
 
 - Other TODOs
-  - [ ] Compatibility with vim8
+  - [ ] Partial compatibility with vim8 (background execution)
   - [ ] Perhaps integration with quickfix/location list
   - [ ] Ad-hoc commands
-  - [ ] Make all options under `g:axe#cmds` outside of `cmd` optional (give them defaults, that is)
+  - [x] Make all options under `g:axe#cmds` outside of `cmd` optional (give them defaults, that is)
   - [ ] Add option `g:axe#cmds.exe_in_proj_root`
   - [x] Write documentation
+  - [ ] Notify successful termination/completion of background command
   - [ ] Better error handling for failed background commands (show a simple message and perhaps redirect output from `stderr` to a temporary buffer and display)
   - [x] Command auto-completion (if possible)
   - [x] List available commands

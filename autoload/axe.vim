@@ -1,4 +1,6 @@
-" We define the root directory as the one that contains the git folder
+" We define the root directory as the one that contains the git folder. I opted
+" not to use the git command to find the git root because not everybody has
+" git.
 function! s:find_root()
   if globpath('.', '.git') ==# './.git'
     let l:gitdir = getcwd()
@@ -51,14 +53,14 @@ endfunction
 
 function! s:name_buffer(filename, with_filename)
     let l:bufnr = 0
-    let l:bufname = a:with_filename ? 'Axe: ' . a:filename : 'Axe'
+    let l:bufname = a:with_filename ? 'AXE: ' . a:filename : 'Axe'
 
     while bufname(l:bufname) ==# l:bufname
       let l:bufnr = l:bufnr + 1
       if a:with_filename
-        let l:bufname = 'Axe: ' . a:filename . ' (' . l:bufnr . ')'
+        let l:bufname = 'AXE: ' . a:filename . ' (' . l:bufnr . ')'
       else
-        let l:bufname = 'Axe (' . l:bufnr . ')'
+        let l:bufname = 'AXE (' . l:bufnr . ')'
       endif
     endwhile
 
@@ -110,6 +112,11 @@ function! s:create_term_cmd(cmd)
   return l:cmd
 endfunction
 
+function! s:default(opt)
+  let l:global_default = get(g:, 'axe#' . a:opt)
+  return get(g:axe#filetype_defaults, a:opt, l:global_default)
+endfunction
+
 function! s:extract_cmd_opt(filetype, subcmd)
   " file type specific commands trump catch-all commands
   if has_key(g:axe#cmds, a:filetype) && has_key(g:axe#cmds, '*')
@@ -124,9 +131,15 @@ function! s:extract_cmd_opt(filetype, subcmd)
   endif
 
   if has_key(l:extcmds, a:subcmd)
-    let l:cmdstr = l:extcmds[a:subcmd]['cmd']
-    let l:with_filename = l:extcmds[a:subcmd]['with_filename']
-    let l:in_term = l:extcmds[a:subcmd]['in_term']
+    try
+      let l:cmdstr = l:extcmds[a:subcmd]['cmd']
+      let l:with_filename = get(l:extcmds[a:subcmd], 'with_filename', s:default('with_filename'))
+      let l:in_term = get(l:extcmds[a:subcmd], 'in_term', s:default('in_term'))
+    catch /Key not present in Dictionary: cmd/
+      echohl ErrorMsg
+      echom 'Invalid configuration entry.'
+      echohl NONE
+    endtry
   endif
 
   return [l:cmdstr, l:with_filename, l:in_term]
