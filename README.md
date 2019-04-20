@@ -1,7 +1,11 @@
 # Axe -- Asynchronous Executor
 
-A configurable plugin to execute external commands in the built-in terminal based on
-file type.
+A configurable plugin to execute external commands in the built-in terminal
+based on file type. This is a rewrite of an unpublished plugin I wrote during
+the vim 7.4 days before async was around. The old incarnation was written in a
+mixture of python and shell to bypass the inability of vim to launch processes
+off the main thread, a situation that has since been ameliorated by the launch
+of neovim, and later, the release of vim version 8.
 
 ## Requirements
 
@@ -29,6 +33,9 @@ Plug 'macthecadillac/axe'
 - Other TODOs
   - [ ] Compatibility with vim8
   - [ ] Perhaps integration with quickfix/location list
+  - [ ] Ad-hoc commands
+  - [ ] Make all options under `g:axe#cmds` outside of `cmd` optional (give them defaults, that is)
+  - [ ] Add option `g:axe#cmds.exe_in_proj_root`
   - [x] Write documentation
   - [ ] Better error handling for failed background commands (show a simple message and perhaps redirect output from `stderr` to a temporary buffer and display)
   - [x] Command auto-completion (if possible)
