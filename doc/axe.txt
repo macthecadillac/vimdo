@@ -1,28 +1,28 @@
-*external_tools*
+*axe*
 
-A configurable plugin to run external commands in the built-in terminal based on
+A configurable plugin to execute external commands in the built-in terminal based on
 file type.
 
 --------------------------------------------------------------------------------
 1. Commands
 
-*ExtCmd*        - `ExtCmd {cmd}` where `cmd` is the sub-command you defined
-                (see |g:external_tools#cmds| below). This will execute the
+*Axe*           - `Axe {cmd}` where `cmd` is the sub-command you defined
+                (see |g:axe#cmds| below). This will execute the
                 command you configured.
-*ExtCmdList*    - List all the defined sub-commands available for the current
+*AxeList*       - List all the defined sub-commands available for the current
                 file type
-*ExtCmdProcs*   - List all background processes launched through |ExtCmd|
+*AxeProcs*      - List all background processes launched through |Axe|
                 (those that run not in the terminal but in the background)
-*ExtCmdStop*    - Terminate process with the provided process number.
-                `ExtCmdStop {#}` where `#` is the process number listed by
-                |ExtCmdListProcs|.
+*AxeStop*       - Terminate process with the provided process number.
+                `Axe {#}` where `#` is the process number listed by
+                |AxeListProcs|.
 
 
 --------------------------------------------------------------------------------
 2. Configurations
 
 Configurations could be global or local. Global configurations reside in your
-`init.vim` whereas local configurations are located in `.external_tools.vim` in
+`init.vim` whereas local configurations are located in `.axe.vim` in
 your local directory, either in the same folder as the file to be edited or in
 the root of the `git` repository. Local configurations, if found, always have
 precedence over global configurations. The configuration options that are
@@ -30,9 +30,9 @@ covered in the following are applicable to both global and local
 configurations.
 
 
-g:external_tools#cmds                                    *g:external_tools#cmds*
+g:axe#cmds                                    *g:axe#cmds*
 
-This is a |dictionary| that maps |ExtCmd| sub-commands to shell commands. The
+This is a |dictionary| that maps |Axe| sub-commands to shell commands. The
 dictionary must contain keys (as |string|'s) that are vim |filetype|'s. The value
 of the each entry is another |dictionary| that contains the following three
 entries:
@@ -51,7 +51,7 @@ commands will override catch-all commands if conflicts arise.
 
 Example: >
 
-  let g:external_tools#cmds = {
+  let g:axe#cmds = {
         \ '*': {
         \     'update-ctags': {
         \       'cmd': 'ctags -R -h --exclude={.git,__pycache,__init__.py}',
@@ -99,7 +99,7 @@ Example: >
         \ }
 <
 
-g:external_tools#split_direction              *g:external_tools#split_direction*
+g:axe#split_direction              *g:axe#split_direction*
 
   Type: |string|
   Default: `'down'`
@@ -109,7 +109,7 @@ g:external_tools#split_direction              *g:external_tools#split_direction*
   `'left'`, `'right'`.
 
 
-g:external_tools#exit_message                    *g:external_tools#exit_message*
+g:axe#exit_message                    *g:axe#exit_message*
 
   Type: |string|
   Default: `'\n-------------------------\nPress ENTER to exit'`
@@ -118,29 +118,31 @@ g:external_tools#exit_message                    *g:external_tools#exit_message*
   a terminal command.
 
 
-g:external_tools#term_height                      *g:external_tools#term_height*
+g:axe#term_height                      *g:axe#term_height*
 
   Type: |integer|
   Default: `15`
 
   For terminal commands, this option sets the height of the terminal split (if
-  |g:external_tools#split_direction| is set to `'up'` or `'down'`).
+  |g:axe#split_direction| is set to `'up'` or `'down'`).
 
 
-g:external_tools#term_width                        *g:external_tools#term_width*
+g:axe#term_width                        *g:axe#term_width*
 
   Type: |integer|
   Default: `79`
 
   For terminal commands, this option sets the width of the terminal split (if
-  |g:external_tools#split_direction| is set to `'left'` or `'right'`).
+  |g:axe#split_direction| is set to `'left'` or `'right'`).
 
 
-                                 *g:external_tools#remove_term_buffer_when_done*
-g:external_tools#remove_term_buffer_when_done
+                                 *g:axe#remove_term_buffer_when_done*
+g:axe#remove_term_buffer_when_done
 
   Type: |boolean|
   Default: `1`
 
   For terminal commands, this option determines whether the buffer in which the
   terminal was run should be discarded when the command exits.
+
+  vim:tw=78:ts=4:ft=help:norl:

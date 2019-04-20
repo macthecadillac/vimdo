@@ -17,12 +17,12 @@ endfunction
 " Find local environmental configuration and overwrite the system-wide
 " configuration, if any
 function! s:source_local_configuration()
-  if filereadable('./.external_tools.vim')
-    execute 'source .external_tools.vim'
+  if filereadable('./.axe.vim')
+    execute 'source .axe.vim'
   else
     let l:root = s:find_root()
-    if filereadable(l:root . '/.external_tools.vim')
-      execute 'source ' . l:root . '/.external_tools.vim'
+    if filereadable(l:root . '/.axe.vim')
+      execute 'source ' . l:root . '/.axe.vim'
     endif
   endif
 endfunction
@@ -34,14 +34,14 @@ function! s:new_split()
         \ 'right': 'botright vsplit',
         \ 'left': 'topleft vsplit',
         \ }
-  if has_key(l:split_directions, g:external_tools#split_direction)
+  if has_key(l:split_directions, g:axe#split_direction)
     " ' Execute' creates a new buffer for the execution to take place,
     " otherwise the current buffer will be replaced by the terminal
-    execute l:split_directions[g:external_tools#split_direction] . ' Execute'
-    if g:external_tools#split_direction ==# 'up' || g:external_tools#split_direction ==# 'down'
-      execute 'resize ' . g:external_tools#term_height
-    elseif g:external_tools#split_direction ==# 'left' || g:external_tools#split_direction ==# 'right'
-      execute 'vertical resize ' . g:external_tools#term_width
+    execute l:split_directions[g:axe#split_direction] . ' Execute'
+    if g:axe#split_direction ==# 'up' || g:axe#split_direction ==# 'down'
+      execute 'resize ' . g:axe#term_height
+    elseif g:axe#split_direction ==# 'left' || g:axe#split_direction ==# 'right'
+      execute 'vertical resize ' . g:axe#term_width
     endif
   endif
 
@@ -51,14 +51,14 @@ endfunction
 
 function! s:name_buffer(filename, with_filename)
     let l:bufnr = 0
-    let l:bufname = a:with_filename ? 'ExtCmd: ' . a:filename : 'ExtCmd'
+    let l:bufname = a:with_filename ? 'Axe: ' . a:filename : 'Axe'
 
     while bufname(l:bufname) ==# l:bufname
       let l:bufnr = l:bufnr + 1
       if a:with_filename
-        let l:bufname = 'ExtCmd: ' . a:filename . ' (' . l:bufnr . ')'
+        let l:bufname = 'Axe: ' . a:filename . ' (' . l:bufnr . ')'
       else
-        let l:bufname = 'ExtCmd (' . l:bufnr . ')'
+        let l:bufname = 'Axe (' . l:bufnr . ')'
       endif
     endwhile
 
@@ -74,9 +74,9 @@ function! s:job_stderr(job_id, data, event) dict
 endfunction
 
 function! s:term_job_exit(job_id, data, event) dict
-  let l:bufnr = g:external_tools#terminal_jobs[a:job_id][1]
-  unlet g:external_tools#terminal_jobs[a:job_id]
-  if g:external_tools#remove_term_buffer_when_done
+  let l:bufnr = g:axe#terminal_jobs[a:job_id][1]
+  unlet g:axe#terminal_jobs[a:job_id]
+  if g:axe#remove_term_buffer_when_done
     execute 'bd! ' . l:bufnr
   else
     close
@@ -84,7 +84,7 @@ function! s:term_job_exit(job_id, data, event) dict
 endfunction
 
 function! s:bg_job_exit(job_id, data, event) dict
-  unlet g:external_tools#background_jobs[a:job_id]
+  unlet g:axe#background_jobs[a:job_id]
 endfunction
 
 function! s:new_job(term)
@@ -105,20 +105,22 @@ function! s:create_term_cmd(cmd)
   let l:cmd = '/bin/bash -c "' .
         \ 'trap : INT;' .
         \ l:subcmd .
-        \ 'printf \"' . g:external_tools#exit_message . '\"' .
+        \ 'printf \"' . g:axe#exit_message . '\"' .
         \ ';read -p \"\""'
   return l:cmd
 endfunction
 
 function! s:extract_cmd_opt(filetype, subcmd)
   " file type specific commands trump catch-all commands
-  if has_key(g:external_tools#cmds, a:filetype) && has_key(g:external_tools#cmds, '*')
-    let l:extcmds = extend(deepcopy(g:external_tools#cmds['*']),
-                           g:external_tools#cmds[l:filetype])
-  elseif has_key(g:external_tools#cmds, a:filetype)
-    let l:extcmds = g:external_tools#cmds[a:filetype]
-  elseif has_key(g:external_tools#cmds, '*')
-    let l:extcmds = g:external_tools#cmds['*']
+  if has_key(g:axe#cmds, a:filetype) && has_key(g:axe#cmds, '*')
+    let l:extcmds = extend(deepcopy(g:axe#cmds['*']),
+                           g:axe#cmds[l:filetype])
+  elseif has_key(g:axe#cmds, a:filetype)
+    let l:extcmds = g:axe#cmds[a:filetype]
+  elseif has_key(g:axe#cmds, '*')
+    let l:extcmds = g:axe#cmds['*']
+  else
+    let l:extcmds = {}
   endif
 
   if has_key(l:extcmds, a:subcmd)
@@ -130,7 +132,7 @@ function! s:extract_cmd_opt(filetype, subcmd)
   return [l:cmdstr, l:with_filename, l:in_term]
 endfunction
 
-function! external_tools#call(subcmd)
+function! axe#call(subcmd)
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
   let l:filetype = &filetype
@@ -152,10 +154,10 @@ function! external_tools#call(subcmd)
       let l:job_id = termopen(l:cmd, l:job)
       call s:name_buffer(l:filename, l:with_filename)
       let l:bufnr = bufnr('%')
-      let g:external_tools#terminal_jobs[l:job_id] = [l:job, l:bufnr]
+      let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
     else
       let l:job_id = jobstart(l:cmd, l:job)
-      let g:external_tools#background_jobs[l:job_id] = [a:subcmd, l:job]
+      let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
     endif
   catch /l:cmdstr/
     echohl ErrorMsg
@@ -164,37 +166,42 @@ function! external_tools#call(subcmd)
   endtry
 endfunction
 
-" List all currently defined commands for this file type
-function! external_tools#list_commands()
+" returns a list of defined commands
+function! s:list_commands()
   let l:filetype = &filetype
-  if has_key(g:external_tools#cmds, l:filetype) && has_key(g:external_tools#cmds, '*')
-    let l:cmds = extend(deepcopy(g:external_tools#cmds['*']),
-                        g:external_tools#cmds[l:filetype])
-    echom ':ExtCmdListCmds'
-    for cmd in keys(l:cmds)
-      echom '  ' . cmd
-    endfor
-  elseif has_key(g:external_tools#cmds, l:filetype)
-    echom ':ExtCmdListCmds'
-    for cmd in keys(g:external_tools#cmds[l:filetype])
-      echom '  ' . cmd
-    endfor
-  elseif has_key(g:external_tools#cmds, '*')
-    echom ':ExtCmdListCmds'
-    for cmd in keys(g:external_tools#cmds['*'])
-      echom '  ' . cmd
-    endfor
+  if has_key(g:axe#cmds, l:filetype) && has_key(g:axe#cmds, '*')
+    let l:cmd_dicts = extend(deepcopy(g:axe#cmds['*']),
+                             g:axe#cmds[l:filetype])
+    let l:cmd = keys(l:cmd_dicts)
+  elseif has_key(g:axe#cmds, l:filetype)
+    let l:cmds = keys(g:axe#cmds[l:filetype])
+  elseif has_key(g:axe#cmds, '*')
+    let l:cmds = keys(g:axe#cmds['*'])
   else
-    echom 'No command is defined for the current file type'
+    let l:cmds = []
   endif
+  return l:cmds
+endfunction
+
+" List all currently defined commands for this file type
+function! axe#list_commands()
+  echom ':ExtCmdListCmds'
+  for cmd in s:list_commands()
+    echom '  ' . cmd
+  endfor
+endfunction
+
+" completion function for Axe
+function! axe#complete_commands(ArgLead, CmdLine, CursorPos)
+  return join(s:list_commands(), "\n")
 endfunction
 
 " TODO: Make output adapt to job-id length
-function! external_tools#list_background_processes()
-  if g:external_tools#background_jobs !=# {}
+function! axe#list_background_processes()
+  if g:axe#background_jobs !=# {}
     echom ':ExtCmdListProcs'
     echom '  #   Command'
-    for l:proc in items(g:external_tools#background_jobs)
+    for l:proc in items(g:axe#background_jobs)
       let l:job_id = l:proc[0]
       let l:cmd = l:proc[1][0]
       echom '  ' . l:job_id . '   ' . l:cmd
@@ -204,8 +211,8 @@ function! external_tools#list_background_processes()
   endif
 endfunction
 
-function! external_tools#stop_process(job_id)
-  if has_key(g:external_tools#background_jobs, a:job_id)
+function! axe#stop_process(job_id)
+  if has_key(g:axe#background_jobs, a:job_id)
     call jobstop(str2nr(a:job_id))
   else
     echom 'No matching process found'
