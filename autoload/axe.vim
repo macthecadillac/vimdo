@@ -63,7 +63,7 @@ function! s:name_buffer(filename, with_filename)
       endif
     endwhile
 
-    execute 'file'  . l:bufname
+    execute 'file '  . l:bufname
 endfunction
 
 function! s:job_stdout(job_id, data, event) dict
