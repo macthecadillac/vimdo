@@ -34,11 +34,9 @@ Plug 'macthecadillac/axe'
   - [ ] Partial compatibility with vim8 (background execution)
   - [ ] Perhaps integration with quickfix/location list
   - [ ] Ad-hoc commands
-  - [x] Make all options under `g:axe#cmds` outside of `cmd` optional (give them defaults, that is)
-  - [x] Add option `g:axe#cmds.exe_in_proj_root`
   - [x] Write documentation
-  - [ ] Notify successful termination/completion of background command
-  - [ ] Better error handling for failed background commands (show a simple message and perhaps redirect output from `stderr` to a temporary buffer and display)
+  - [x] Notify successful termination/completion of background command
+  - [x] Better error handling for failed background commands (show a simple message and perhaps redirect output from `stderr` to a temporary buffer and display)
   - [x] Command auto-completion (if possible)
   - [x] List available commands
   - [x] Process manager/Terminate commands
@@ -72,14 +70,20 @@ over global configurations.
 All hooks reside in `g:axe#cmds`. It is a dictionary that maps
 `Axe` sub-commands to shell commands. The dictionary must contain keys (as
 `string`'s) that are vim `filetype`'s. The value of the each entry is another
-dictionary that contains the following three entries:
+dictionary that contains the following four entries:
 
   - `cmd`: `string` The command to be invoked
   - `with_filename`: `boolean` Supply the command with the file name (append to
     the command) if set to `1`, run the command without the file name if set to
-    `0`.
+    `0`. (Default is 1)
   - `in_term`: `boolean` Run the command in the terminal if set to `1`, run in the
-    background if set to `0`.
+    background if set to `0`. (Default is 0)
+  - `exe_in_proj_root`: `boolean` Execute in the root of the project where the
+    `.git` directory is found. (Default is 0)
+
+Of the four entries, `cmd` is mandatory (for obvious reasons). The other three
+are optional. When they are not specified, the default values are used (see
+above). New defaults could be set (see the documentation).
 
 Instead of being specific file types, the first level keys could optionally be a
 wildcard, in this case `*` that serves as a catch-all, and all its commands will
@@ -92,34 +96,23 @@ Example:
 let g:axe#cmds = {
       \ '*': {
       \     'update-ctags': {
-      \       'cmd': 'ctags -R -h --exclude={.git,__pycache,__init__.py}',
+      \       'cmd': 'ctags -R -h --exclude={.git}',
       \       'with_filename': 0,
-      \       'in_term': 0
       \     },
       \   },
       \ 'python': {
       \     'run': {
       \       'cmd': '$HOME/anaconda3/bin/python',
-      \       'with_filename': 1,
       \       'in_term': 1
       \     },
-      \     'background-run': {
-      \       'cmd': '$HOME/anaconda3/bin/python',
-      \       'with_filename': 1,
-      \       'in_term': 0
-      \     },
+      \     'background-run': {'cmd': '$HOME/anaconda3/bin/python'},
       \   },
       \ 'tex': {
       \     'build': {
       \       'cmd': 'latexmk -silent',
-      \       'with_filename': 1,
       \       'in_term': 1
       \     },
-      \     'continuous-build': {
-      \       'cmd': 'latexmk -pvc -interaction=nonstopmode',
-      \       'with_filename': 1,
-      \       'in_term': 0
-      \     },
+      \     'continuous-build': {'cmd': 'latexmk -pvc -interaction=nonstopmode'},
       \   },
       \ 'rust': {
       \     'run': {'cmd': 'cargo run', 'with_filename': 0, 'in_term': 1},
@@ -130,7 +123,6 @@ let g:axe#cmds = {
       \     },
       \     'release-build': {
       \       'cmd': 'cargo build --release',
-      \       'with_filename': 0,
       \       'in_term': 1
       \     },
       \   },

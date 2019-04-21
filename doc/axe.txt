@@ -1,9 +1,9 @@
 *axe*
 
-A configurable plugin to execute external commands in the built-in terminal based on
-file type.
+A configurable plugin to execute external commands in the built-in terminal
+based on file type.
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 1. Commands
 
 *Axe*           - `Axe {cmd}` where `cmd` is the sub-command you defined
@@ -18,7 +18,7 @@ file type.
                 |AxeListProcs|.
 
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 2. Configurations
 
 Configurations could be global or local. Global configurations reside in your
@@ -30,76 +30,122 @@ covered in the following are applicable to both global and local
 configurations.
 
 
-g:axe#cmds                                    *g:axe#cmds*
+g:axe#cmds                                                        *g:axe#cmds*
 
-This is a |dictionary| that maps |Axe| sub-commands to shell commands. The
-dictionary must contain keys (as |string|'s) that are vim |filetype|'s. The value
-of the each entry is another |dictionary| that contains the following three
-entries:
+  This is a |dictionary| that maps |Axe| sub-commands to shell commands. The
+  dictionary must contain keys (as |string|'s) that are vim |filetype|'s. The
+  value of the each entry is another |dictionary| that contains the following
+  four entries:
+  
+    `cmd`              |string| The command to be invoked
+    `with_filename`    |boolean| Supply the command with the file name (append
+                     to the command) if set to 1, run the command without the
+                     file name if set to 0. (Default is 1)
+    `in_term`          |boolean| Run the command in the terminal if set to 1, run
+                     in the background if set to 0. (Default is 0)
+    `exe_in_proj_root` |boolean| Execute in the root of the project where the
+                     .git directory is found. (Default is 0)
+  
+  Of the four entries, `cmd` is mandatory (for obvious reasons). The other
+  three are optional. When they are not specified, the default values are used
+  (see above). These global defaults could be overridden either as a global
+  option or on a per filetype basis. See |g:axe#filetype_defaults|,
+  |g:axe#with_filename|, |g:axe#in_term| and |g:axe#exe_in_proj_root|.
+  
+  Instead of being specific file types, the first level keys could optionally
+  be a wildcard, in this case `'*'` that serves as a catch-all and the command
+  will henceforth be defined for all file types. Notice that file type
+  specific commands will override catch-all commands if conflicts arise.
+  
+  Example: >
+  
+    let g:axe#cmds = {
+          \ '*': {
+          \     'update-ctags': {
+          \       'cmd': 'ctags -R -h --exclude={.git}',
+          \       'with_filename': 0,
+          \     },
+          \   },
+          \ 'python': {
+          \     'run': {
+          \       'cmd': '$HOME/anaconda3/bin/python',
+          \       'in_term': 1
+          \     },
+          \     'background-run': {'cmd': '$HOME/anaconda3/bin/python'},
+          \   },
+          \ 'tex': {
+          \     'build': {
+          \       'cmd': 'latexmk -silent',
+          \       'in_term': 1
+          \     },
+          \     'continuous-build': {'cmd': 'latexmk -pvc -interaction=nonstopmode'},
+          \   },
+          \ 'rust': {
+          \     'run': {'cmd': 'cargo run', 'with_filename': 0, 'in_term': 1},
+          \     'quick-build': {
+          \       'cmd': 'cargo build',
+          \       'with_filename': 0,
+          \       'in_term': 1
+          \     },
+          \     'release-build': {
+          \       'cmd': 'cargo build --release',
+          \       'in_term': 1
+          \     },
+          \   },
+          \ }
+  <
 
-  `cmd`              |string| The command to be invoked
-  `with_filename`    |boolean| Supply the command with the file name (append to
-                   the command) if set to 1, run the command without the file
-                   name if set to 0.
+g:axe#filetype_defaults                              *g:axe#filetype_defaults*
+
+  Type: |dictionary|
+  Default: `{}`
+
+  This option sets the behavior of the executor on a per filetype basis. The
+  dictionary could have the following keys:
+
+  `with_filename`    |boolean| Supply the command with the file name (append
+                   to the command) if set to 1, run the command without the
+                   file name if set to 0.
   `in_term`          |boolean| Run the command in the terminal if set to 1, run
                    in the background if set to 0.
+  `exe_in_proj_root` |boolean| Execute in the root of the project where the
+                   .git directory is found.
 
-Instead of being specific file types, the first level keys could optionally be
-a wildcard, in this case `'*'` that serves as a catch-all and the command will
-henceforth be defined for all file types. Notice that file type specific
-commands will override catch-all commands if conflicts arise.
-
-Example: >
-
-  let g:axe#cmds = {
-        \ '*': {
-        \     'update-ctags': {
-        \       'cmd': 'ctags -R -h --exclude={.git,__pycache,__init__.py}',
-        \       'with_filename': 0,
-        \       'in_term': 0
-        \     },
-        \   },
-        \ 'python': {
-        \     'run': {
-        \       'cmd': '$HOME/anaconda3/bin/python',
-        \       'with_filename': 1,
-        \       'in_term': 1
-        \     },
-        \     'background-run': {
-        \       'cmd': '$HOME/anaconda3/bin/python',
-        \       'with_filename': 1,
-        \       'in_term': 0
-        \     },
-        \   },
-        \ 'tex': {
-        \     'build': {
-        \       'cmd': 'latexmk -silent',
-        \       'with_filename': 1,
-        \       'in_term': 1
-        \     },
-        \     'continuous-build': {
-        \       'cmd': 'latexmk -pvc -interaction=nonstopmode',
-        \       'with_filename': 1,
-        \       'in_term': 0
-        \     },
-        \   },
-        \ 'rust': {
-        \     'run': {'cmd': 'cargo run', 'with_filename': 0, 'in_term': 1},
-        \     'quick-build': {
-        \       'cmd': 'cargo build',
-        \       'with_filename': 0,
-        \       'in_term': 1
-        \     },
-        \     'release-build': {
-        \       'cmd': 'cargo build --release',
-        \       'with_filename': 0,
-        \       'in_term': 1
-        \     },
-        \   },
+  Example: >
+  
+      let g:axe#filetype_defaults = {
+        \ 'rust': {'with_filename': 0},
         \ }
-<
+  <
 
-g:axe#split_direction              *g:axe#split_direction*
+
+g:axe#with_filename                                      *g:axe#with_filename*
+  
+  Type: |boolean|
+  Default: `1`
+
+  Whether the name of the file currently in buffer should be appended to the
+  command being run.
+
+
+g:axe#in_term                                                  *g:axe#in_term*
+
+  Type: |boolean|
+  Default: `0`
+
+  Whether to run commands in the neovim terminal.
+
+
+g:axe#exe_in_proj_root                                *g:axe#exe_in_proj_root*
+
+  Type: |boolean|
+  Default: `0`
+
+  Whether to run commands in project root directories (if the .git directory
+  could be found).
+
+
+g:axe#split_direction                                  *g:axe#split_direction*
 
   Type: |string|
   Default: `'down'`
@@ -109,16 +155,16 @@ g:axe#split_direction              *g:axe#split_direction*
   `'left'`, `'right'`.
 
 
-g:axe#exit_message                    *g:axe#exit_message*
+g:axe#exit_message                                        *g:axe#exit_message*
 
   Type: |string|
   Default: `'\n-------------------------\nPress ENTER to exit'`
 
-  This option sets the text to be printed to the terminal at the termination of
-  a terminal command.
+  This option sets the text to be printed to the terminal at the termination
+  of a terminal command.
 
 
-g:axe#term_height                      *g:axe#term_height*
+g:axe#term_height                                          *g:axe#term_height*
 
   Type: |integer|
   Default: `15`
@@ -127,7 +173,7 @@ g:axe#term_height                      *g:axe#term_height*
   |g:axe#split_direction| is set to `'up'` or `'down'`).
 
 
-g:axe#term_width                        *g:axe#term_width*
+g:axe#term_width                                            *g:axe#term_width*
 
   Type: |integer|
   Default: `79`
@@ -136,13 +182,13 @@ g:axe#term_width                        *g:axe#term_width*
   |g:axe#split_direction| is set to `'left'` or `'right'`).
 
 
-                                 *g:axe#remove_term_buffer_when_done*
+                                          *g:axe#remove_term_buffer_when_done*
 g:axe#remove_term_buffer_when_done
 
   Type: |boolean|
   Default: `1`
 
-  For terminal commands, this option determines whether the buffer in which the
-  terminal was run should be discarded when the command exits.
+  For terminal commands, this option determines whether the buffer in which
+  the terminal was run should be discarded when the command exits.
 
   vim:tw=78:ts=4:ft=help:norl:

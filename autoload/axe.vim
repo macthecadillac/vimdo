@@ -47,8 +47,7 @@ function! s:new_split()
     endif
   endif
 
-  setlocal nonumber
-  setlocal nospell
+  setlocal nonumber nospell
 endfunction
 
 function! s:name_buffer(filename, with_filename)
@@ -86,6 +85,17 @@ function! s:term_job_exit(job_id, data, event) dict
 endfunction
 
 function! s:bg_job_exit(job_id, data, event) dict
+  let l:stderr = g:axe#background_jobs[a:job_id][1]['stderr']
+  if l:stderr ==# ['']
+    echom 'Process "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
+  else
+    " redirect stderr output to a temporary buffer and show
+    new
+    call append(line('$'), l:stderr)
+    setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile readonly nospell
+    file stderr    " name the temporary buffer as 'stderr'
+    vertical resize 10
+  endif
   unlet g:axe#background_jobs[a:job_id]
 endfunction
 
@@ -114,16 +124,16 @@ endfunction
 
 function! s:default(opt)
   let l:global_default = get(g:, 'axe#' . a:opt)
-  return get(g:axe#filetype_defaults, a:opt, l:global_default)
+  let l:filetype_default = get(g:axe#filetype_defaults, &filetype, {})
+  return get(l:filetype_default, a:opt, l:global_default)
 endfunction
 
-function! s:extract_cmd_opt(filetype, subcmd)
+function! s:extract_cmd_opt(subcmd)
   " file type specific commands trump catch-all commands
-  if has_key(g:axe#cmds, a:filetype) && has_key(g:axe#cmds, '*')
-    let l:extcmds = extend(deepcopy(g:axe#cmds['*']),
-                           g:axe#cmds[l:filetype])
-  elseif has_key(g:axe#cmds, a:filetype)
-    let l:extcmds = g:axe#cmds[a:filetype]
+  if has_key(g:axe#cmds, &filetype) && has_key(g:axe#cmds, '*')
+    let l:extcmds = extend(deepcopy(g:axe#cmds['*']), g:axe#cmds[&filetype])
+  elseif has_key(g:axe#cmds, &filetype)
+    let l:extcmds = g:axe#cmds[&filetype]
   elseif has_key(g:axe#cmds, '*')
     let l:extcmds = g:axe#cmds['*']
   else
@@ -156,7 +166,7 @@ function! axe#call(subcmd)
   call s:source_local_configuration()
 
   try
-    let l:cmd_opts = s:extract_cmd_opt(l:filetype, a:subcmd)
+    let l:cmd_opts = s:extract_cmd_opt(a:subcmd)
     let l:cmdstr = l:cmd_opts[0]
     let l:with_filename = l:cmd_opts[1]
     let l:in_term = l:cmd_opts[2]
