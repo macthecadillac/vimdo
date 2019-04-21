@@ -63,7 +63,7 @@ function! s:name_buffer(filename, with_filename)
       endif
     endwhile
 
-    execute "file " . l:bufname
+    execute 'file'  . l:bufname
 endfunction
 
 function! s:job_stdout(job_id, data, event) dict
@@ -94,7 +94,7 @@ function! s:bg_job_exit(job_id, data, event) dict
     call append(line('$'), l:stderr)
     setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile readonly nospell
     file stderr    " name the temporary buffer as 'stderr'
-    vertical resize 10
+    resize 10
   endif
   unlet g:axe#background_jobs[a:job_id]
 endfunction
@@ -205,8 +205,7 @@ endfunction
 function! s:list_commands()
   let l:filetype = &filetype
   if has_key(g:axe#cmds, l:filetype) && has_key(g:axe#cmds, '*')
-    let l:cmd_dicts = extend(deepcopy(g:axe#cmds['*']),
-                             g:axe#cmds[l:filetype])
+    let l:cmd_dicts = extend(deepcopy(g:axe#cmds['*']), g:axe#cmds[l:filetype])
     let l:cmd = keys(l:cmd_dicts)
   elseif has_key(g:axe#cmds, l:filetype)
     let l:cmds = keys(g:axe#cmds[l:filetype])
