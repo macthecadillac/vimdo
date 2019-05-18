@@ -87,7 +87,7 @@ endfunction
 function! s:bg_job_exit(job_id, data, event) dict
   let l:stderr = g:axe#background_jobs[a:job_id][1]['stderr']
   if l:stderr ==# ['']
-    echom 'Process "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
+    echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
   else
     " redirect stderr output to a temporary buffer and show
     new
