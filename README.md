@@ -20,27 +20,6 @@ Add the following line to your `init.vim`
 ```vim
 Plug 'macthecadillac/axe'
 ```
-
-## TODOS
-
-- Main features
-  - [x] Configurable commands (using a dictionary)
-  - [x] File type based commands
-  - [x] Non file type based commands
-  - [x] Terminal based commands
-  - [x] Background commands
-
-- Other TODOs
-  - [ ] Partial compatibility with vim8 (background execution)
-  - [ ] Perhaps integration with quickfix/location list
-  - [ ] Ad-hoc commands
-  - [x] Write documentation
-  - [x] Notify successful termination/completion of background command
-  - [x] Better error handling for failed background commands (show a simple message and perhaps redirect output from `stderr` to a temporary buffer and display)
-  - [x] Command auto-completion (if possible)
-  - [x] List available commands
-  - [x] Process manager/Terminate commands
-
 ## Usage
 
 The following commands are available:
@@ -60,10 +39,10 @@ type
 ## Configuration
 
 Configurations can be global or local. Global configurations reside in your
-`init.vim` whereas local configurations live in `.axe.vim` in your
-local directory (either in the same folder as the file in buffer or in the root
-of the `git` repository). Local configurations, if found, always have precedence
-over global configurations.
+global configuration (usually in `init.vim`) whereas local configurations live
+in `.axe.vim` in your local directory (either in the same folder as the file in
+buffer or in the root of the `git` repository). Local configurations, if found,
+always have precedence over global configurations.
 
 ### Hooks to shell commands
 
