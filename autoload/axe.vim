@@ -9,7 +9,7 @@ function! s:find_root()
     return l:gitdir
   elseif getcwd() ==# '/'
     execute 'cd' fnameescape(b:file_path)
-    return 'Reached filesystem boundary'
+    return '.'
   else
     execute 'cd' fnameescape('..')
     return s:find_root()
