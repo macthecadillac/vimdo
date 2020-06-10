@@ -90,25 +90,28 @@ function! s:bg_job_exit(job_id, data, event) dict
   let l:stderr = g:axe#background_jobs[a:job_id][1]['stderr']
   if l:stderr ==# ['']
     echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
-  else
+  elseif g:axe#background_jobs[a:job_id][1]['show_stderr']
     " redirect stderr output to a temporary buffer and show
     new
     call append(line('$'), l:stderr)
     setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile readonly nospell
     file stderr    " name the temporary buffer as 'stderr'
     resize 10
+  else
+    echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited with error'
   endif
   unlet g:axe#background_jobs[a:job_id]
 endfunction
 
-function! s:new_job(term)
-  let exit_func = a:term ? 's:term_job_exit' : 's:bg_job_exit'
+function! s:new_job(term, show_stderr)
+  let l:exit_func = a:term ? 's:term_job_exit' : 's:bg_job_exit'
   return {
         \ 'stdout': [],
         \ 'stderr': [],
         \ 'on_stdout': function('s:job_stdout'),
         \ 'on_stderr': function('s:job_stderr'),
-        \ 'on_exit': function(exit_func)
+        \ 'on_exit': function(l:exit_func),
+        \ 'show_stderr': a:show_stderr,
         \ }
 endfunction
 
@@ -150,6 +153,8 @@ function! s:extract_cmd_opt(subcmd)
             \                   s:default('with_filename'))
       let l:exe_in_proj_root = get(l:extcmds[a:subcmd], 'exe_in_proj_root',
             \                      s:default('exe_in_proj_root'))
+      let l:show_stderr = get(l:extcmds[a:subcmd], 'show_stderr_on_error',
+            \                 s:default('show_stderr_on_error'))
     catch /Key not present in Dictionary: cmd/
       echohl ErrorMsg
       echom 'Invalid configuration entry.'
@@ -157,7 +162,7 @@ function! s:extract_cmd_opt(subcmd)
     endtry
   endif
 
-  return [l:cmdstr, l:with_filename, l:in_term, l:exe_in_proj_root]
+  return [l:cmdstr, l:with_filename, l:in_term, l:exe_in_proj_root, l:show_stderr]
 endfunction
 
 function! axe#call(subcmd)
@@ -173,6 +178,7 @@ function! axe#call(subcmd)
     let l:with_filename = l:cmd_opts[1]
     let l:in_term = l:cmd_opts[2]
     let l:exe_in_proj_root = l:cmd_opts[3]
+    let l:show_stderr = l:cmd_opts[4]
 
     let l:cmd = l:with_filename ? l:cmdstr . ' ' . l:filename : l:cmdstr
     let l:cmd = l:in_term ? s:create_term_cmd(l:cmd) : l:cmd
@@ -185,7 +191,7 @@ function! axe#call(subcmd)
       endif
     endif
 
-    let l:job = s:new_job(l:in_term)
+    let l:job = s:new_job(l:in_term, l:show_stderr)
     if !(l:exe_in_proj_root && l:root ==# '')
       if l:in_term
         call s:new_split()

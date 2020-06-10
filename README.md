@@ -59,10 +59,12 @@ dictionary that contains the following four entries:
     background if set to `0`. (Default is 0)
   - `exe_in_proj_root`: `boolean` Execute in the root of the project where the
     `.git` directory is found. (Default is 0)
+  - `show_stderr_on_error`: `boolean` Show the stderr output in a split if the
+    process exits with error. (Default is 1)
 
-Of the four entries, `cmd` is mandatory (for obvious reasons). The other three
-are optional. When they are not specified, the default values are used (see
-above). New defaults could be set (see the documentation).
+Of all the entries, `cmd` is mandatory (for obvious reasons). The rest are
+optional. When they are not specified, the default values are used (see above).
+New defaults could be set (see the documentation).
 
 Instead of being specific file types, the first level keys could optionally be a
 wildcard, in this case `*` that serves as a catch-all, and all its commands will
