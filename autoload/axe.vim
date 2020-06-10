@@ -9,7 +9,7 @@ function! s:find_root()
     return l:gitdir
   elseif getcwd() ==# '/'
     execute 'cd' fnameescape(b:file_path)
-    return '.'
+    return ''
   else
     execute 'cd' fnameescape('..')
     return s:find_root()
@@ -23,8 +23,10 @@ function! s:source_local_configuration()
     execute 'source .axe.vim'
   else
     let l:root = s:find_root()
-    if filereadable(l:root . '/.axe.vim')
-      execute 'source ' . l:root . '/.axe.vim'
+    if l:root !=# ''
+      if filereadable(l:root . '/.axe.vim')
+        execute 'source ' . l:root . '/.axe.vim'
+      endif
     endif
   endif
 endfunction
@@ -175,20 +177,26 @@ function! axe#call(subcmd)
     let l:cmd = l:with_filename ? l:cmdstr . ' ' . l:filename : l:cmdstr
     let l:cmd = l:in_term ? s:create_term_cmd(l:cmd) : l:cmd
 
+    let l:root = ''
     if l:exe_in_proj_root
-      execute 'cd' s:find_root()
+      let l:root = s:find_root()
+      if l:root !=# ''
+        execute 'cd' s:find_root()
+      endif
     endif
 
     let l:job = s:new_job(l:in_term)
-    if l:in_term
-      call s:new_split()
-      let l:job_id = termopen(l:cmd, l:job)
-      call s:name_buffer(l:filename, l:with_filename)
-      let l:bufnr = bufnr('%')
-      let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
-    else
-      let l:job_id = jobstart(l:cmd, l:job)
-      let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
+    if !(l:exe_in_proj_root && l:root ==# '')
+      if l:in_term
+        call s:new_split()
+        let l:job_id = termopen(l:cmd, l:job)
+        call s:name_buffer(l:filename, l:with_filename)
+        let l:bufnr = bufnr('%')
+        let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
+      else
+        let l:job_id = jobstart(l:cmd, l:job)
+        let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
+      endif
     endif
 
     if l:exe_in_proj_root
