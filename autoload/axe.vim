@@ -117,9 +117,25 @@ function! s:extract_cmd_opt(subcmd)
     let l:extcmds = {}
   endif
 
+  let l:global_settings = {
+        \ 'with_filename': g:axe#with_filename,
+        \ 'in_term': g:axe#in_term,
+        \ 'exe_in_proj_root': g:axe#exe_in_proj_root,
+        \ 'show_stderr_on_error': g:axe#show_stderr_on_error,
+        \ 'show_stderr_in_split': g:axe#show_stderr_in_split,
+        \ 'show_stderr_in_float': g:axe#show_stderr_in_float,
+        \ 'show_stderr_in_cmdline': g:axe#show_stderr_in_cmdline,
+        \ 'show_stdout': g:axe#show_stdout,
+        \ 'show_stdout_in_split': g:axe#show_stdout_in_split,
+        \ 'show_stdout_in_float': g:axe#show_stdout_in_float,
+        \ 'show_stdout_in_cmdline': g:axe#show_stdout_in_cmdline,
+        \ 'float_width': g:axe#float_width,
+        \ 'float_height': g:axe#float_height,
+        \ }
+
   let l:filetype_defaults = get(g:axe#filetype_defaults, &filetype, {})
   let l:cmd = extend(l:filetype_defaults, l:extcmds[a:subcmd], 'force')
-  return extend(g:axe#global_defaults, l:cmd, 'force')
+  return extend(l:global_settings, l:cmd, 'force')
 endfunction
 
 function! s:build_cmd(cmd)
@@ -179,7 +195,21 @@ function! s:print_to_float(text, fitcontent)
     let l:opts.focusable = v:true
   endif
   call nvim_buf_set_lines(l:scratch, 0, -1, v:true, a:text)
-  return nvim_open_win(l:scratch, 0, l:opts)
+  let l:win_id =  nvim_open_win(l:scratch, 0, l:opts)
+
+  let l:close_win = printf('s:close_win(%s)', l:win_id)
+  augroup AxeCloseFloatWin
+    autocmd!
+    execute 'autocmd CursorMoved,CursorMovedI,InsertEnter <buffer> call ' . l:close_win
+    execute 'autocmd BufEnter * call ' . l:close_win
+  augroup END
+endfunction
+
+function! s:close_win(win_id)
+  call nvim_win_close(a:win_id, v:true)
+  augroup AxeCloseFloatWin
+    autocmd!
+  augroup END
 endfunction
 
 function! s:print_to_split(subcmd, text)
