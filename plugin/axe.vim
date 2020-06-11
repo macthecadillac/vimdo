@@ -16,7 +16,7 @@ let g:axe#exe_in_proj_root = get(g:, 'axe#exe_in_proj_root', 0)
 let g:axe#show_stderr_on_error = get(g:, 'axe#show_stderr_on_error', 1)
 let g:axe#filetype_defaults = get(g:, 'axe#filetype_defaults', {})
 
-command! -nargs=1 -complete=custom,axe#complete_commands Axe call axe#call(<f-args>)
+command! -nargs=1 -complete=custom,axe#complete_commands Axe call axe#execute_subcmd(<f-args>)
 command! AxeProcs call axe#list_background_processes()
 command! -nargs=1 AxeStop call axe#stop_process(<f-args>)
 command! AxeList call axe#list_commands()

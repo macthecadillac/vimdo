@@ -1,28 +1,10 @@
-" We define the root directory as the one that contains the git folder. I opted
-" not to use the git command to find the git root because not everybody has
-" git.
-function! s:find_root()
-  if globpath('.', '.git') ==# './.git'
-    let l:gitdir = getcwd()
-    " Return working directory to the original value
-    execute 'cd' fnameescape(b:file_path)
-    return l:gitdir
-  elseif getcwd() ==# '/'
-    execute 'cd' fnameescape(b:file_path)
-    return ''
-  else
-    execute 'cd' fnameescape('..')
-    return s:find_root()
-  endif
-endfunction
-
 " Find local environmental configuration and overwrite the system-wide
 " configuration, if any
 function! s:source_local_configuration()
   if filereadable('./.axe.vim')
     execute 'source .axe.vim'
   else
-    let l:root = s:find_root()
+    let l:root = axe#util#root()
     if l:root !=# ''
       if filereadable(l:root . '/.axe.vim')
         execute 'source ' . l:root . '/.axe.vim'
@@ -147,7 +129,7 @@ function! s:extract_cmd_opt(subcmd)
 
   if has_key(l:extcmds, a:subcmd)
     try
-      let l:cmdstr = l:extcmds[a:subcmd]['cmd']
+      let l:cmd_list = l:extcmds[a:subcmd]['cmd']
       let l:in_term = get(l:extcmds[a:subcmd], 'in_term', s:default('in_term'))
       let l:with_filename = get(l:extcmds[a:subcmd], 'with_filename',
             \                   s:default('with_filename'))
@@ -162,32 +144,54 @@ function! s:extract_cmd_opt(subcmd)
     endtry
   endif
 
-  return [l:cmdstr, l:with_filename, l:in_term, l:exe_in_proj_root, l:show_stderr]
+  return [l:cmd_list, l:with_filename, l:in_term, l:exe_in_proj_root, l:show_stderr]
 endfunction
 
-function! axe#call(subcmd)
+function! s:build_cmd(cmd)
+  try
+    let l:cmd = a:cmd[0]
+  catch /list index out of range/
+    let l:cmd = ''
+  endtry
+
+  let l:i = 1
+  while l:i < len(a:cmd)
+    " try to treat the element as a function reference and call it
+    try
+      let l:cmd .= ' ' . function(a:cmd[l:i])()
+    " if the element can't be called, it must be an ordinary command line
+    " argument
+    catch /.*/
+      let l:cmd .= ' ' . a:cmd[l:i]
+    endtry
+    let l:i += 1
+  endwhile
+
+  return l:cmd
+endfunction
+
+function! axe#execute_subcmd(subcmd)
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
-  let l:filetype = &filetype
 
   call s:source_local_configuration()
 
   try
     let l:cmd_opts = s:extract_cmd_opt(a:subcmd)
-    let l:cmdstr = l:cmd_opts[0]
+    let l:cmd_list = l:cmd_opts[0]
     let l:with_filename = l:cmd_opts[1]
     let l:in_term = l:cmd_opts[2]
     let l:exe_in_proj_root = l:cmd_opts[3]
     let l:show_stderr = l:cmd_opts[4]
 
-    let l:cmd = l:with_filename ? l:cmdstr . ' ' . l:filename : l:cmdstr
+    let l:cmd = s:build_cmd(l:cmd_list)
     let l:cmd = l:in_term ? s:create_term_cmd(l:cmd) : l:cmd
 
     let l:root = ''
     if l:exe_in_proj_root
-      let l:root = s:find_root()
+      let l:root = axe#util#root()
       if l:root !=# ''
-        execute 'cd' s:find_root()
+        execute 'cd' axe#util#root()
       endif
     endif
 
@@ -208,7 +212,7 @@ function! axe#call(subcmd)
     if l:exe_in_proj_root
       execute 'cd' b:file_path
     endif
-  catch /l:cmdstr/
+  catch /l:cmd/
     echohl ErrorMsg
     echom 'Command not defined.'
     echohl NONE
