@@ -70,8 +70,18 @@ endfunction
 
 function! s:bg_job_exit(job_id, data, event) dict
   let l:stderr = g:axe#background_jobs[a:job_id][1].stderr
+  let l:stdout = g:axe#background_jobs[a:job_id][1].stdout
   if l:stderr ==# ['']
-    echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
+    let l:stdout_opts = g:axe#background_jobs[a:job_id][1].stdout_opts
+    if l:stdout_opts.show_in_split
+      call s:print_to_split(g:axe#background_jobs[a:job_id][0], l:stdout)
+    elseif l:stdout_opts.show_in_float
+      call s:print_to_float(l:stdout, l:stdout_opts.float_fit_content)
+    elseif l:stdout_opts.show_in_cmdline
+      call s:print_to_cmdline(l:stdout)
+    else
+      echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
+    endif
   elseif g:axe#background_jobs[a:job_id][1].show_stderr
     " redirect stderr output to a temporary buffer and show
     call s:print_to_split('stderr', l:stderr)
@@ -81,7 +91,7 @@ function! s:bg_job_exit(job_id, data, event) dict
   unlet g:axe#background_jobs[a:job_id]
 endfunction
 
-function! s:new_job(term, show_stderr)
+function! s:new_job(term, stdout_opts, show_stderr)
   let l:exit_func = a:term ? 's:term_job_exit' : 's:bg_job_exit'
   return {
         \ 'stdout': [],
@@ -89,6 +99,7 @@ function! s:new_job(term, show_stderr)
         \ 'on_stdout': function('s:job_stdout'),
         \ 'on_stderr': function('s:job_stderr'),
         \ 'on_exit': function(l:exit_func),
+        \ 'stdout_opts': a:stdout_opts,
         \ 'show_stderr': a:show_stderr,
         \ }
 endfunction
@@ -125,10 +136,10 @@ function! s:extract_cmd_opt(subcmd)
         \ 'show_stderr_in_split': g:axe#show_stderr_in_split,
         \ 'show_stderr_in_float': g:axe#show_stderr_in_float,
         \ 'show_stderr_in_cmdline': g:axe#show_stderr_in_cmdline,
-        \ 'show_stdout': g:axe#show_stdout,
         \ 'show_stdout_in_split': g:axe#show_stdout_in_split,
         \ 'show_stdout_in_float': g:axe#show_stdout_in_float,
         \ 'show_stdout_in_cmdline': g:axe#show_stdout_in_cmdline,
+        \ 'float_fit_to_content': g:axe#float_fit_to_content,
         \ 'float_width': g:axe#float_width,
         \ 'float_height': g:axe#float_height,
         \ }
@@ -162,7 +173,7 @@ function! s:build_cmd(cmd)
 endfunction
 
 function! s:print_to_cmdline(text)
-  echom a:text
+  echo join(a:text, "\n")
 endfunction
 
 function! s:print_to_float(text, fitcontent)
@@ -181,7 +192,8 @@ function! s:print_to_float(text, fitcontent)
     endwhile
 
     let l:opts.relative = 'cursor'
-    let l:opts.width = max(l:widths)
+    let l:width = max(l:widths)
+    let l:opts.width = l:width > 0 ? l:width : 1
     let l:opts.height = len(a:text)
     let l:opts.row = 1
     let l:opts.col = 0
@@ -240,7 +252,18 @@ function! axe#execute_subcmd(subcmd)
       endif
     endif
 
-    let l:job = s:new_job(l:cmd_opts.in_term, l:cmd_opts.show_stderr_on_error)
+    let l:stdout_opts = {
+          \ 'show_in_split': l:cmd_opts.show_stdout_in_split,
+          \ 'show_in_float': l:cmd_opts.show_stdout_in_float,
+          \ 'float_fit_content': l:cmd_opts.float_fit_to_content,
+          \ 'show_in_cmdline': l:cmd_opts.show_stdout_in_cmdline,
+          \ }
+
+    let l:job = s:new_job(
+          \ l:cmd_opts.in_term,
+          \ l:stdout_opts,
+          \ l:cmd_opts.show_stderr_on_error
+          \ )
     if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
       if l:cmd_opts.in_term
         call s:new_split()
