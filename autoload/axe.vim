@@ -34,14 +34,14 @@ function! s:new_split()
   setlocal nonumber nospell
 endfunction
 
-function! s:name_buffer(filename, with_filename)
+function! s:name_buffer(subtitle, with_subtitle)
     let l:bufnr = 0
-    let l:bufname = a:with_filename ? 'AXE: ' . a:filename : 'Axe'
+    let l:bufname = a:with_subtitle ? 'AXE: ' . a:subtitle : 'Axe'
 
     while bufname(l:bufname) ==# l:bufname
       let l:bufnr = l:bufnr + 1
-      if a:with_filename
-        let l:bufname = 'AXE: ' . a:filename . ' (' . l:bufnr . ')'
+      if a:with_subtitle
+        let l:bufname = 'AXE: ' . a:subtitle . ' (' . l:bufnr . ')'
       else
         let l:bufname = 'AXE (' . l:bufnr . ')'
       endif
@@ -69,16 +69,12 @@ function! s:term_job_exit(job_id, data, event) dict
 endfunction
 
 function! s:bg_job_exit(job_id, data, event) dict
-  let l:stderr = g:axe#background_jobs[a:job_id][1]['stderr']
+  let l:stderr = g:axe#background_jobs[a:job_id][1].stderr
   if l:stderr ==# ['']
     echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
-  elseif g:axe#background_jobs[a:job_id][1]['show_stderr']
+  elseif g:axe#background_jobs[a:job_id][1].show_stderr
     " redirect stderr output to a temporary buffer and show
-    new
-    call append(line('$'), l:stderr)
-    setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile readonly nospell
-    file stderr    " name the temporary buffer as 'stderr'
-    resize 10
+    call s:print_to_split('stderr', l:stderr)
   else
     echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited with error'
   endif
@@ -109,12 +105,6 @@ function! s:create_term_cmd(cmd)
   return l:cmd
 endfunction
 
-function! s:default(opt)
-  let l:global_default = get(g:, 'axe#' . a:opt)
-  let l:filetype_default = get(g:axe#filetype_defaults, &filetype, {})
-  return get(l:filetype_default, a:opt, l:global_default)
-endfunction
-
 function! s:extract_cmd_opt(subcmd)
   " file type specific commands trump catch-all commands
   if has_key(g:axe#cmds, &filetype) && has_key(g:axe#cmds, '*')
@@ -127,24 +117,9 @@ function! s:extract_cmd_opt(subcmd)
     let l:extcmds = {}
   endif
 
-  if has_key(l:extcmds, a:subcmd)
-    try
-      let l:cmd_list = l:extcmds[a:subcmd]['cmd']
-      let l:in_term = get(l:extcmds[a:subcmd], 'in_term', s:default('in_term'))
-      let l:with_filename = get(l:extcmds[a:subcmd], 'with_filename',
-            \                   s:default('with_filename'))
-      let l:exe_in_proj_root = get(l:extcmds[a:subcmd], 'exe_in_proj_root',
-            \                      s:default('exe_in_proj_root'))
-      let l:show_stderr = get(l:extcmds[a:subcmd], 'show_stderr_on_error',
-            \                 s:default('show_stderr_on_error'))
-    catch /Key not present in Dictionary: cmd/
-      echohl ErrorMsg
-      echom 'Invalid configuration entry.'
-      echohl NONE
-    endtry
-  endif
-
-  return [l:cmd_list, l:with_filename, l:in_term, l:exe_in_proj_root, l:show_stderr]
+  let l:filetype_defaults = get(g:axe#filetype_defaults, &filetype, {})
+  let l:cmd = extend(l:filetype_defaults, l:extcmds[a:subcmd], 'force')
+  return extend(g:axe#global_defaults, l:cmd, 'force')
 endfunction
 
 function! s:build_cmd(cmd)
@@ -170,6 +145,51 @@ function! s:build_cmd(cmd)
   return l:cmd
 endfunction
 
+function! s:print_to_cmdline(text)
+  echom a:text
+endfunction
+
+function! s:print_to_float(text, fitcontent)
+  let l:scratch = nvim_create_buf(v:false, v:true)
+  let l:opts = {
+        \ 'anchor': 'NW',
+        \ 'style': 'minimal',
+        \ }
+  if a:fitcontent
+    " `max . map len` in the handicapped language of vimscript
+    let l:widths = []
+    let l:i = 0
+    while l:i < len(a:text)
+      let l:widths = add(l:widths, len(a:text[l:i]))
+      let l:i += 1
+    endwhile
+
+    let l:opts.relative = 'cursor'
+    let l:opts.width = max(l:widths)
+    let l:opts.height = len(a:text)
+    let l:opts.row = 1
+    let l:opts.col = 0
+    let l:opts.focusable = v:false
+  else
+    let l:opts.relative = 'editor'
+    let l:opts.width = g:axe#float_width * winwidth(0) / 100
+    let l:opts.height = g:axe#float_height * winheight(0) / 100
+    let l:opts.row = (winheight(0) - l:opts.height) / 2
+    let l:opts.col = (winwidth(0) - l:opts.width) / 2
+    let l:opts.focusable = v:true
+  endif
+  call nvim_buf_set_lines(l:scratch, 0, -1, v:true, a:text)
+  return nvim_open_win(l:scratch, 0, l:opts)
+endfunction
+
+function! s:print_to_split(subcmd, text)
+  new
+  call append(0, a:text)
+  setlocal buftype=nofile bufhidden=wipe nobuflisted nolist noswapfile readonly nospell nonumber
+  call s:name_buffer(a:subcmd, 1)
+  resize 10
+endfunction
+
 function! axe#execute_subcmd(subcmd)
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
@@ -178,29 +198,24 @@ function! axe#execute_subcmd(subcmd)
 
   try
     let l:cmd_opts = s:extract_cmd_opt(a:subcmd)
-    let l:cmd_list = l:cmd_opts[0]
-    let l:with_filename = l:cmd_opts[1]
-    let l:in_term = l:cmd_opts[2]
-    let l:exe_in_proj_root = l:cmd_opts[3]
-    let l:show_stderr = l:cmd_opts[4]
 
-    let l:cmd = s:build_cmd(l:cmd_list)
-    let l:cmd = l:in_term ? s:create_term_cmd(l:cmd) : l:cmd
+    let l:cmd = s:build_cmd(l:cmd_opts.cmd)
+    let l:cmd = l:cmd_opts.in_term ? s:create_term_cmd(l:cmd) : l:cmd
 
     let l:root = ''
-    if l:exe_in_proj_root
+    if l:cmd_opts.exe_in_proj_root
       let l:root = axe#util#root()
       if l:root !=# ''
         execute 'cd' axe#util#root()
       endif
     endif
 
-    let l:job = s:new_job(l:in_term, l:show_stderr)
-    if !(l:exe_in_proj_root && l:root ==# '')
-      if l:in_term
+    let l:job = s:new_job(l:cmd_opts.in_term, l:cmd_opts.show_stderr_on_error)
+    if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
+      if l:cmd_opts.in_term
         call s:new_split()
         let l:job_id = termopen(l:cmd, l:job)
-        call s:name_buffer(l:filename, l:with_filename)
+        call s:name_buffer(l:filename, l:cmd_opts.with_filename)
         let l:bufnr = bufnr('%')
         let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
       else
@@ -209,9 +224,13 @@ function! axe#execute_subcmd(subcmd)
       endif
     endif
 
-    if l:exe_in_proj_root
+    if l:cmd_opts.exe_in_proj_root
       execute 'cd' b:file_path
     endif
+  catch /Key not present in Dictionary: cmd/
+    echohl ErrorMsg
+    echom 'Invalid configuration entry.'
+    echohl NONE
   catch /l:cmd/
     echohl ErrorMsg
     echom 'Command not defined.'
