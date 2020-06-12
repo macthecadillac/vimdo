@@ -69,16 +69,25 @@ function! s:term_job_exit(job_id, data, event) dict
 endfunction
 
 function! s:bg_job_exit(job_id, data, event) dict
-  let l:stderr = g:axe#background_jobs[a:job_id][1].stderr
-  let l:stdout = g:axe#background_jobs[a:job_id][1].stdout
+  let l:job_info = g:axe#background_jobs[a:job_id][1]
+  let l:stderr = l:job_info.stderr
+  let l:stdout = l:job_info.stdout
   if l:stderr ==# ['']
-    let l:stdout_opts = g:axe#background_jobs[a:job_id][1].stdout_opts
+    let l:stdout_opts = l:job_info.stdout_opts
+    let l:post_execution = l:job_info.post_execution
+
+    try
+      let l:text = function(l:post_execution, [l:stdout])()
+    catch /.*/
+      let l:text = l:stdout
+    endtry
+
     if l:stdout_opts.show_in_split
-      call s:print_to_split(g:axe#background_jobs[a:job_id][0], l:stdout)
+      call s:print_to_split(g:axe#background_jobs[a:job_id][0], l:text)
     elseif l:stdout_opts.show_in_float
-      call s:print_to_float(l:stdout, l:stdout_opts.float_fit_content)
+      call s:print_to_float(l:text, l:stdout_opts.float_fit_content)
     elseif l:stdout_opts.show_in_cmdline
-      call s:print_to_cmdline(l:stdout)
+      call s:print_to_cmdline(l:text)
     else
       echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
     endif
@@ -91,7 +100,7 @@ function! s:bg_job_exit(job_id, data, event) dict
   unlet g:axe#background_jobs[a:job_id]
 endfunction
 
-function! s:new_job(term, stdout_opts, show_stderr)
+function! s:new_job(term, stdout_opts, show_stderr, post_execution)
   let l:exit_func = a:term ? 's:term_job_exit' : 's:bg_job_exit'
   return {
         \ 'stdout': [],
@@ -101,6 +110,7 @@ function! s:new_job(term, stdout_opts, show_stderr)
         \ 'on_exit': function(l:exit_func),
         \ 'stdout_opts': a:stdout_opts,
         \ 'show_stderr': a:show_stderr,
+        \ 'post_execution': a:post_execution
         \ }
 endfunction
 
@@ -259,11 +269,19 @@ function! axe#execute_subcmd(subcmd)
           \ 'show_in_cmdline': l:cmd_opts.show_stdout_in_cmdline,
           \ }
 
+    if has_key(l:cmd_opts, 'post_execution')
+      let l:post_execution = l:cmd_opts.post_execution
+    else
+      let l:post_execution = ''
+    endif
+
     let l:job = s:new_job(
           \ l:cmd_opts.in_term,
           \ l:stdout_opts,
-          \ l:cmd_opts.show_stderr_on_error
+          \ l:cmd_opts.show_stderr_on_error,
+          \ l:post_execution
           \ )
+
     if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
       if l:cmd_opts.in_term
         call s:new_split()
@@ -284,7 +302,7 @@ function! axe#execute_subcmd(subcmd)
     echohl ErrorMsg
     echom 'Invalid configuration entry.'
     echohl NONE
-  catch /l:cmd/
+  catch /Key not present in Dictionary/
     echohl ErrorMsg
     echom 'Command not defined.'
     echohl NONE
