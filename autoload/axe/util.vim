@@ -1,5 +1,5 @@
 function! axe#util#filename()
-  return expand('%')
+  return expand('%:p')
 endfunction
 
 function! axe#util#path()
