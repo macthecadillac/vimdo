@@ -234,6 +234,27 @@ function! s:close_win(win_id)
   augroup END
 endfunction
 
+function! s:open_float_term(cmd, opts)
+  let l:buf = nvim_create_buf(v:false, v:true)
+  let l:width = (g:axe#float_term_width_pct * winwidth(0)) / 100
+  let l:height = (g:axe#float_term_height_pct * winheight(0)) / 100
+  let l:opts = {
+        \ 'anchor': g:axe#float_term_anchor,
+        \ 'style': 'minimal',
+        \ 'relative': g:axe#float_term_relative,
+        \ 'width': min([max([l:width, g:axe#float_term_width_min]),
+        \               g:axe#float_term_width_max]),
+        \ 'height': min([max([l:height, g:axe#float_term_height_min]),
+        \                g:axe#float_term_height_max]),
+        \ 'row': winheight(0) - 1,
+        \ 'col': winwidth(0) - 1,
+        \ 'focusable': v:true,
+        \ }
+  let l:win_id = nvim_open_win(l:buf, 0, l:opts)
+  call nvim_set_current_win(l:win_id)
+  return {'win_id': l:win_id, 'job_id': termopen(a:cmd, a:opts)}
+endfunction
+
 function! s:print_to_split(subcmd, text)
   new
   call append(0, a:text)
@@ -251,8 +272,8 @@ function! axe#execute_subcmd(subcmd)
   try
     let l:cmd_opts = s:extract_cmd_opt(a:subcmd)
 
-    let l:cmd = s:build_cmd(l:cmd_opts.cmd)
-    let l:cmd = l:cmd_opts.in_term ? s:create_term_cmd(l:cmd) : l:cmd
+    let l:raw_cmd = s:build_cmd(l:cmd_opts.cmd)
+    let l:cmd = l:cmd_opts.in_term ? s:create_term_cmd(l:raw_cmd) : l:raw_cmd
 
     let l:root = ''
     if l:cmd_opts.exe_in_proj_root
@@ -284,11 +305,20 @@ function! axe#execute_subcmd(subcmd)
 
     if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
       if l:cmd_opts.in_term
-        call s:new_split()
-        let l:job_id = termopen(l:cmd, l:job)
-        call s:name_buffer(l:filename, l:cmd_opts.with_filename)
+        if g:axe#open_term_in_float
+          let l:job_attr = s:open_float_term(l:cmd, l:job)
+          let l:job_id = l:job_attr.job_id
+          let g:axe#floats[l:job_attr.win_id] = {
+                \ 'job_id': l:job_attr.job_id,
+                \ 'cmd': l:raw_cmd
+                \ }
+        else
+          call s:new_split()
+          let l:job_id = termopen(l:cmd, l:job)
+        endif
         let l:bufnr = bufnr('%')
         let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
+        call s:name_buffer(l:filename, l:cmd_opts.with_filename)
       else
         let l:job_id = jobstart(l:cmd, l:job)
         let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
@@ -338,7 +368,22 @@ function! axe#complete_commands(ArgLead, CmdLine, CursorPos)
   return join(s:list_commands(), "\n")
 endfunction
 
-" TODO: Make output adapt to job-id length
+" TODO: Make output adapt to id length
+" TODO: Merge list_floats and list_background_processes
+function! axe#list_floats()
+  if g:axe#floats !=# {}
+    echom ':ExtCmdListFloats'
+    echom '  #      Command'
+    for l:win in items(g:axe#floats)
+      let l:win_id = l:win[0]
+      let l:cmd = l:win[1].cmd
+      echom '  ' . l:win_id . '   ' . l:cmd
+    endfor
+  else
+    echom 'Nothing to show'
+  endif
+endfunction
+
 function! axe#list_background_processes()
   if g:axe#background_jobs !=# {}
     echom ':ExtCmdListProcs'
