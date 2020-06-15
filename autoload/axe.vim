@@ -86,8 +86,8 @@ function! s:bg_job_exit(job_id, data, event) dict
   let l:job_info = g:axe#background_jobs[a:job_id][1]
   let l:stderr = l:job_info.stderr
   let l:stdout = l:job_info.stdout
+  let l:opts = l:job_info.opts
   if l:stderr ==# ['']
-    let l:stdout_opts = l:job_info.stdout_opts
     let l:callback = l:job_info.callback
 
     try
@@ -96,16 +96,17 @@ function! s:bg_job_exit(job_id, data, event) dict
       let l:text = l:stdout
     endtry
 
-    if l:stdout_opts.show_in_split
+    if l:opts.show_stdout_in_split
       call s:print_to_split(g:axe#background_jobs[a:job_id][0], l:text)
-    elseif l:stdout_opts.show_in_float
-      call s:print_to_float(l:text, l:stdout_opts.float_fit_content)
-    elseif l:stdout_opts.show_in_cmdline
+    elseif l:opts.show_stdout_in_float
+      call s:print_to_float(l:text, l:opts.float_fit_content,
+            \               l:opts.width_pct, l:opts.height_pct)
+    elseif l:opts.show_stdout_in_cmdline
       call s:print_to_cmdline(l:text)
     else
       echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
     endif
-  elseif g:axe#background_jobs[a:job_id][1].show_stderr
+  elseif l:opts.show_stderr_on_error
     " redirect stderr output to a temporary buffer and show
     call s:print_to_split('stderr', l:stderr)
   else
@@ -114,16 +115,15 @@ function! s:bg_job_exit(job_id, data, event) dict
   unlet g:axe#background_jobs[a:job_id]
 endfunction
 
-function! s:new_job(term, stdout_opts, show_stderr, callback)
-  let l:exit_func = a:term ? 's:term_job_exit' : 's:bg_job_exit'
+function! s:new_job(opts, callback)
+  let l:exit_func = a:opts.in_term ? 's:term_job_exit' : 's:bg_job_exit'
   return {
         \ 'stdout': [],
         \ 'stderr': [],
         \ 'on_stdout': function('s:job_stdout'),
         \ 'on_stderr': function('s:job_stderr'),
         \ 'on_exit': function(l:exit_func),
-        \ 'stdout_opts': a:stdout_opts,
-        \ 'show_stderr': a:show_stderr,
+        \ 'opts': a:opts,
         \ 'callback': a:callback
         \ }
 endfunction
@@ -153,6 +153,10 @@ function! s:extract_cmd_opt(subcmd)
   endif
 
   let l:global_settings = {
+        \ 'exit_message': g:axe#exit_message,
+        \ 'term_height': g:axe#term_height,
+        \ 'term_width': g:axe#term_width,
+        \ 'remove_term_buffer_when_done': g:axe#remove_term_buffer_when_done,
         \ 'with_filename': g:axe#with_filename,
         \ 'in_term': g:axe#in_term,
         \ 'exe_in_proj_root': g:axe#exe_in_proj_root,
@@ -160,12 +164,19 @@ function! s:extract_cmd_opt(subcmd)
         \ 'show_stdout_in_split': g:axe#show_stdout_in_split,
         \ 'show_stdout_in_float': g:axe#show_stdout_in_float,
         \ 'show_stdout_in_cmdline': g:axe#show_stdout_in_cmdline,
-        \ 'float_width': g:axe#float_width,
-        \ 'float_height': g:axe#float_height,
+        \ 'float_term_height_pct': g:axe#float_term_height_pct,
+        \ 'float_term_width_pct': g:axe#float_term_width_pct,
+        \ 'float_term_height_max': g:axe#float_term_height_max,
+        \ 'float_term_width_max': g:axe#float_term_width_max,
+        \ 'float_term_height_min': g:axe#float_term_height_min,
+        \ 'float_term_width_min': g:axe#float_term_width_min,
+        \ 'float_term_anchor': g:axe#float_term_anchor,
+        \ 'float_term_relative': g:axe#float_term_relative,
+        \ 'open_term_in_float': g:axe#open_term_in_float,
         \ }
 
   let l:filetype_defaults = get(g:axe#filetype_defaults, &filetype, {})
-  let l:cmd = extend(l:filetype_defaults, l:extcmds[a:subcmd], 'force')
+  let l:cmd = extend(deepcopy(l:filetype_defaults), l:extcmds[a:subcmd], 'force')
   return extend(l:global_settings, l:cmd, 'force')
 endfunction
 
@@ -194,7 +205,7 @@ function! s:print_to_cmdline(text)
   echo join(a:text, "\n")
 endfunction
 
-function! s:print_to_float(text, fitcontent)
+function! s:print_to_float(text, fitcontent, width_pct, height_pct)
   let l:scratch = nvim_create_buf(v:false, v:true)
   let l:opts = {
         \ 'anchor': 'NW',
@@ -216,8 +227,8 @@ function! s:print_to_float(text, fitcontent)
     let l:opts.focusable = v:false
   else
     let l:opts.relative = 'editor'
-    let l:opts.width = g:axe#float_width * winwidth(0) / 100
-    let l:opts.height = g:axe#float_height * winheight(0) / 100
+    let l:opts.width = a:width_pct * winwidth(0) / 100
+    let l:opts.height = a:height_pct * winheight(0) / 100
     let l:opts.row = (winheight(0) - l:opts.height) / 2
     let l:opts.col = (winwidth(0) - l:opts.width) / 2
     let l:opts.focusable = v:true
@@ -253,16 +264,16 @@ function! axe#close_win(win_id)
   endif
 endfunction
 
-function! s:open_float_term(cmd, opts)
+function! s:open_float_term(cmd, term_opts, configs)
   let l:buf = nvim_create_buf(v:false, v:true)
   let l:bg_buf = nvim_create_buf(v:false, v:true)
 
-  let l:width = (g:axe#float_term_width_pct * winwidth(0)) / 100
-  let l:width = min([max([l:width, g:axe#float_term_width_min]),
-        \            g:axe#float_term_width_max])
+  let l:width = (a:configs.float_term_width_pct * winwidth(0)) / 100
+  let l:width = min([max([l:width, a:configs.float_term_width_min]),
+        \            a:configs.float_term_width_max])
   let l:height = (g:axe#float_term_height_pct * winheight(0)) / 100
-  let l:height = min([max([l:height, g:axe#float_term_height_min]),
-        \             g:axe#float_term_height_max])
+  let l:height = min([max([l:height, a:configs.float_term_height_min]),
+        \             a:configs.float_term_height_max])
 
   let l:bg_top = '╭' . repeat('─', l:width) . '╮'
   let l:bg_side = '│' . repeat(' ', l:width) . '│'
@@ -272,7 +283,7 @@ function! s:open_float_term(cmd, opts)
 
   " set up the background
   let l:bg_opts = {
-        \ 'anchor': g:axe#float_term_anchor,
+        \ 'anchor': a:configs.float_term_anchor,
         \ 'style': 'minimal',
         \ 'relative': g:axe#float_term_relative,
         \ 'width': l:width + 2,
@@ -290,9 +301,9 @@ function! s:open_float_term(cmd, opts)
 
   " set up the main terminal
   let l:opts = {
-        \ 'anchor': g:axe#float_term_anchor,
+        \ 'anchor': a:configs.float_term_anchor,
         \ 'style': 'minimal',
-        \ 'relative': g:axe#float_term_relative,
+        \ 'relative': a:configs.float_term_relative,
         \ 'width': l:width,
         \ 'height': l:height,
         \ 'row': l:bg_row - 1,
@@ -306,7 +317,7 @@ function! s:open_float_term(cmd, opts)
 
   return {
       \ 'win_id': l:win_id,
-      \ 'job_id': termopen(a:cmd, a:opts),
+      \ 'job_id': termopen(a:cmd, a:term_opts),
       \ 'bg_id': l:bg_id
       \ }
 endfunction
@@ -339,12 +350,6 @@ function! axe#execute_subcmd(subcmd)
       endif
     endif
 
-    let l:stdout_opts = {
-          \ 'show_in_split': l:cmd_opts.show_stdout_in_split,
-          \ 'show_in_float': l:cmd_opts.show_stdout_in_float,
-          \ 'show_in_cmdline': l:cmd_opts.show_stdout_in_cmdline,
-          \ }
-
     if has_key(l:cmd_opts, 'callback')
       let l:callback = l:cmd_opts.callback
     else
@@ -352,30 +357,32 @@ function! axe#execute_subcmd(subcmd)
     endif
 
     let l:job = s:new_job(
-          \ l:cmd_opts.in_term,
-          \ l:stdout_opts,
-          \ l:cmd_opts.show_stderr_on_error,
+          \ l:cmd_opts,
           \ l:callback
           \ )
 
     if has('nvim')
       if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
-        if l:cmd_opts.in_term && has('nvim-0.2')
-          if g:axe#open_term_in_float && has('nvim-0.4')
-            let l:job_attr = s:open_float_term(l:cmd, l:job)
-            let l:job_id = l:job_attr.job_id
-            let g:axe#floats[l:job_attr.win_id] = {
-                  \ 'job_id': l:job_attr.job_id,
-                  \ 'cmd': l:raw_cmd,
-                  \ 'bg_id': l:job_attr.bg_id
-                  \ }
+        if l:cmd_opts.in_term
+          if has('nvim-0.2')
+            if g:axe#open_term_in_float && has('nvim-0.4')
+              let l:job_attr = s:open_float_term(l:cmd, l:job, l:cmd_opts)
+              let l:job_id = l:job_attr.job_id
+              let g:axe#floats[l:job_attr.win_id] = {
+                    \ 'job_id': l:job_attr.job_id,
+                    \ 'cmd': l:raw_cmd,
+                    \ 'bg_id': l:job_attr.bg_id
+                    \ }
+            else
+              call s:new_split()
+              let l:job_id = termopen(l:cmd, l:job)
+            endif
+            let l:bufnr = bufnr('%')
+            let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
+            call s:name_buffer(l:filename, l:cmd_opts.with_filename)
           else
-            call s:new_split()
-            let l:job_id = termopen(l:cmd, l:job)
+            echom 'Terminal execution requires neovim >= 0.2'
           endif
-          let l:bufnr = bufnr('%')
-          let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
-          call s:name_buffer(l:filename, l:cmd_opts.with_filename)
         else
           let l:job_id = jobstart(l:cmd, l:job)
           let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
