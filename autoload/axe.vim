@@ -230,7 +230,7 @@ function! s:print_to_float(text, fitcontent)
   call nvim_buf_set_lines(l:scratch, 0, -1, v:true, a:text)
   let l:win_id =  nvim_open_win(l:scratch, 0, l:opts)
 
-  let l:close_win = printf('axe#close_win(%s)', l:win_id)
+  let l:close_win = printf('s:close_win(%s)', l:win_id)
   augroup AxeCloseFloatWin
     autocmd!
     execute 'autocmd CursorMoved,CursorMovedI,InsertEnter <buffer> call ' . l:close_win
@@ -238,12 +238,16 @@ function! s:print_to_float(text, fitcontent)
   augroup END
 endfunction
 
+function! s:close_win(win_id)
+  call nvim_win_close(str2nr(a:win_id), v:true)
+  augroup AxeCloseFloatWin
+    autocmd!
+  augroup END
+endfunction
+
 function! axe#close_win(win_id)
   if has_key(g:axe#floats, a:win_id)
     call nvim_win_close(str2nr(a:win_id), v:true)
-    augroup AxeCloseFloatWin
-      autocmd!
-    augroup END
   else
     echom 'No matching floating window found'
   endif
