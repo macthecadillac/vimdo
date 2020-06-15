@@ -157,13 +157,9 @@ function! s:extract_cmd_opt(subcmd)
         \ 'in_term': g:axe#in_term,
         \ 'exe_in_proj_root': g:axe#exe_in_proj_root,
         \ 'show_stderr_on_error': g:axe#show_stderr_on_error,
-        \ 'show_stderr_in_split': g:axe#show_stderr_in_split,
-        \ 'show_stderr_in_float': g:axe#show_stderr_in_float,
-        \ 'show_stderr_in_cmdline': g:axe#show_stderr_in_cmdline,
         \ 'show_stdout_in_split': g:axe#show_stdout_in_split,
         \ 'show_stdout_in_float': g:axe#show_stdout_in_float,
         \ 'show_stdout_in_cmdline': g:axe#show_stdout_in_cmdline,
-        \ 'float_fit_to_content': g:axe#float_fit_to_content,
         \ 'float_width': g:axe#float_width,
         \ 'float_height': g:axe#float_height,
         \ }
@@ -245,7 +241,7 @@ function! s:close_win(win_id)
 endfunction
 
 function! axe#close_win(win_id)
-  if has_key(g:axe#floats, a:win_id)
+  if has_key(g:axe#floats, a:win_id) && has('nvim-0.4')
     try
       call nvim_win_close(str2nr(a:win_id), v:true)
     catch /Invalid window id/
@@ -346,7 +342,6 @@ function! axe#execute_subcmd(subcmd)
     let l:stdout_opts = {
           \ 'show_in_split': l:cmd_opts.show_stdout_in_split,
           \ 'show_in_float': l:cmd_opts.show_stdout_in_float,
-          \ 'float_fit_content': l:cmd_opts.float_fit_to_content,
           \ 'show_in_cmdline': l:cmd_opts.show_stdout_in_cmdline,
           \ }
 
@@ -363,26 +358,28 @@ function! axe#execute_subcmd(subcmd)
           \ l:callback
           \ )
 
-    if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
-      if l:cmd_opts.in_term
-        if g:axe#open_term_in_float
-          let l:job_attr = s:open_float_term(l:cmd, l:job)
-          let l:job_id = l:job_attr.job_id
-          let g:axe#floats[l:job_attr.win_id] = {
-                \ 'job_id': l:job_attr.job_id,
-                \ 'cmd': l:raw_cmd,
-                \ 'bg_id': l:job_attr.bg_id
-                \ }
+    if has('nvim')
+      if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
+        if l:cmd_opts.in_term && has('nvim-0.2')
+          if g:axe#open_term_in_float && has('nvim-0.4')
+            let l:job_attr = s:open_float_term(l:cmd, l:job)
+            let l:job_id = l:job_attr.job_id
+            let g:axe#floats[l:job_attr.win_id] = {
+                  \ 'job_id': l:job_attr.job_id,
+                  \ 'cmd': l:raw_cmd,
+                  \ 'bg_id': l:job_attr.bg_id
+                  \ }
+          else
+            call s:new_split()
+            let l:job_id = termopen(l:cmd, l:job)
+          endif
+          let l:bufnr = bufnr('%')
+          let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
+          call s:name_buffer(l:filename, l:cmd_opts.with_filename)
         else
-          call s:new_split()
-          let l:job_id = termopen(l:cmd, l:job)
+          let l:job_id = jobstart(l:cmd, l:job)
+          let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
         endif
-        let l:bufnr = bufnr('%')
-        let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
-        call s:name_buffer(l:filename, l:cmd_opts.with_filename)
-      else
-        let l:job_id = jobstart(l:cmd, l:job)
-        let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
       endif
     endif
 
@@ -478,9 +475,11 @@ function! axe#list_background_processes()
 endfunction
 
 function! axe#stop_process(job_id)
-  if has_key(g:axe#background_jobs, a:job_id)
-    call jobstop(str2nr(a:job_id))
-  else
-    echom 'No matching process found'
+  if has('nvim')
+    if has_key(g:axe#background_jobs, a:job_id)
+      call jobstop(str2nr(a:job_id))
+    else
+      echom 'No matching process found'
+    endif
   endif
 endfunction
