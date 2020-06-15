@@ -1,4 +1,4 @@
-*axe*
+*vimdo*
 
 A configurable plugin to execute external commands in the built-in terminal
 based on file type.
@@ -6,29 +6,29 @@ based on file type.
 ------------------------------------------------------------------------------
 1. Commands
 
-*Axe*           - `Axe {cmd}` where `cmd` is the sub-command you defined
-                (see |g:axe#cmds| below). This will execute the
+*VimDo*           - `VimDo {cmd}` where `cmd` is the sub-command you defined
+                (see |g:vimdo#cmds| below). This will execute the
                 command you configured.
-*AxeList*       - List all the defined sub-commands available for the current
+*VimDoList*       - List all the defined sub-commands available for the current
                 file type
-*AxeProcs*      - List all background processes launched through |Axe|
+*VimDoProcs*      - List all background processes launched through |VimDo|
                 (those that run not in the terminal but in the background)
-*AxeStop*       - Terminate process with the provided process number.
-                `AxeStop {#}` where `#` is the process number listed by
-                |AxeListProcs|.
+*VimDoStop*       - Terminate process with the provided process number.
+                `VimDoStop {#}` where `#` is the process number listed by
+                |VimDoListProcs|.
 
-*AxeFloats*     - List all the float terminals opened by |Axe|.
+*VimDoFloats*     - List all the float terminals opened by |VimDo|.
 
-*AxeCloseFloat* - Close the floating window with the provided window ID.
-                `AxeCloseFloat {#}` where `#` is the window ID listed by
-                |AxeFloats|.
+*VimDoCloseFloat* - Close the floating window with the provided window ID.
+                `VimDoCloseFloat {#}` where `#` is the window ID listed by
+                |VimDoFloats|.
 
 
 ------------------------------------------------------------------------------
 2. Configurations
 
 Configurations could be global or local. Global configurations reside in your
-`init.vim` whereas local configurations are located in `.axe.vim` in
+`init.vim` whereas local configurations are located in `.vimdo.vim` in
 your local directory, either in the same folder as the file to be edited or in
 the root of the `git` repository. Local configurations, if found, always have
 precedence over global configurations. The configuration options that are
@@ -36,9 +36,9 @@ covered in the following are applicable to both global and local
 configurations.
 
 
-g:axe#cmds                                                        *g:axe#cmds*
+g:vimdo#cmds                                                        *g:vimdo#cmds*
 
-  All hooks reside in `g:axe#cmds`. It is a dictionary that maps `Axe`
+  All hooks reside in `g:vimdo#cmds`. It is a dictionary that maps `VimDo`
   sub-commands to shell commands. The dictionary must contain keys (as
   `string`'s) that are vim `filetype`'s. The value of the each entry is
   another dictionary that must contain this entry:
@@ -46,7 +46,7 @@ g:axe#cmds                                                        *g:axe#cmds*
     `cmd`              |string| The command to be invoked
   
   Aside from `cmd`, you can include any valid configuration keys (without the
-  `'axe#'` prefix) in the dictionary and these will have precedence over the
+  `'vimdo#'` prefix) in the dictionary and these will have precedence over the
   global/file type configurations.
 
   Instead of being specific file types, the first level keys could optionally
@@ -56,7 +56,7 @@ g:axe#cmds                                                        *g:axe#cmds*
   
   Example: >
   
-    let g:axe#cmds = {
+    let g:vimdo#cmds = {
           \ '*': {
           \     'update-ctags': {
           \       'cmd': 'ctags -R -h --exclude={.git}',
@@ -92,24 +92,24 @@ g:axe#cmds                                                        *g:axe#cmds*
           \ }
   <
 
-g:axe#filetype_defaults                              *g:axe#filetype_defaults*
+g:vimdo#filetype_defaults                              *g:vimdo#filetype_defaults*
 
   Type: |dictionary|
   Default: `{}`
 
   This option sets the behavior of the executor on a per filetype basis. The
   dictionary could contain any of the configuration entries (without the
-  `'axe#'` prefix).
+  `'vimdo#'` prefix).
 
   Example: >
   
-      let g:axe#filetype_defaults = {
+      let g:vimdo#filetype_defaults = {
         \ 'rust': {'with_filename': 0},
         \ }
   <
 
 
-g:axe#with_filename                                      *g:axe#with_filename*
+g:vimdo#with_filename                                      *g:vimdo#with_filename*
   
   Type: |boolean|
   Default: `1`
@@ -118,7 +118,7 @@ g:axe#with_filename                                      *g:axe#with_filename*
   command being run.
 
 
-g:axe#in_term                                                  *g:axe#in_term*
+g:vimdo#in_term                                                  *g:vimdo#in_term*
 
   Type: |boolean|
   Default: `0`
@@ -126,7 +126,7 @@ g:axe#in_term                                                  *g:axe#in_term*
   Whether to run commands in the neovim terminal.
 
 
-g:axe#exe_in_proj_root                                *g:axe#exe_in_proj_root*
+g:vimdo#exe_in_proj_root                                *g:vimdo#exe_in_proj_root*
 
   Type: |boolean|
   Default: `0`
@@ -135,7 +135,7 @@ g:axe#exe_in_proj_root                                *g:axe#exe_in_proj_root*
   could be found).
 
 
-g:axe#split_direction                                  *g:axe#split_direction*
+g:vimdo#split_direction                                  *g:vimdo#split_direction*
 
   Type: |string|
   Default: `'down'`
@@ -145,7 +145,7 @@ g:axe#split_direction                                  *g:axe#split_direction*
   `'left'`, `'right'`.
 
 
-g:axe#exit_message                                        *g:axe#exit_message*
+g:vimdo#exit_message                                        *g:vimdo#exit_message*
 
   Type: |string|
   Default: `'\n-------------------------\nPress ENTER to exit'`
@@ -154,26 +154,26 @@ g:axe#exit_message                                        *g:axe#exit_message*
   of a terminal command.
 
 
-g:axe#term_height                                          *g:axe#term_height*
+g:vimdo#term_height                                          *g:vimdo#term_height*
 
   Type: |integer|
   Default: `15`
 
   For terminal commands, this option sets the height of the terminal split (if
-  |g:axe#split_direction| is set to `'up'` or `'down'`).
+  |g:vimdo#split_direction| is set to `'up'` or `'down'`).
 
 
-g:axe#term_width                                            *g:axe#term_width*
+g:vimdo#term_width                                            *g:vimdo#term_width*
 
   Type: |integer|
   Default: `79`
 
   For terminal commands, this option sets the width of the terminal split (if
-  |g:axe#split_direction| is set to `'left'` or `'right'`).
+  |g:vimdo#split_direction| is set to `'left'` or `'right'`).
 
 
-                                          *g:axe#remove_term_buffer_when_done*
-g:axe#remove_term_buffer_when_done
+                                          *g:vimdo#remove_term_buffer_when_done*
+g:vimdo#remove_term_buffer_when_done
 
   Type: |boolean|
   Default: `1`
@@ -181,7 +181,7 @@ g:axe#remove_term_buffer_when_done
   For terminal commands, this option determines whether the buffer in which
   the terminal was run should be discarded when the command exits.
 
-g:axe#show_stderr_on_error                        *g:axe#show_stderr_on_error*
+g:vimdo#show_stderr_on_error                        *g:vimdo#show_stderr_on_error*
 
   Type: |boolean|
   Default: `1`
@@ -189,70 +189,70 @@ g:axe#show_stderr_on_error                        *g:axe#show_stderr_on_error*
   For background commands, this option determines whether to show stderr when
   the command exited with an error.
 
-g:axe#show_stdout_in_split                        *g:axe#show_stdout_in_split*
+g:vimdo#show_stdout_in_split                        *g:vimdo#show_stdout_in_split*
 
   Type: |boolean|
   Default: `0`
 
   Whether to pipe the output from stdout to a split.
 
-g:axe#show_stdout_in_float                        *g:axe#show_stdout_in_float*
+g:vimdo#show_stdout_in_float                        *g:vimdo#show_stdout_in_float*
 
   Type: |boolean|
   Default: `0`
 
   Whether to show the output of stdout in a floating window.
 
-g:axe#show_stdout_in_cmdline                    *g:axe#show_stdout_in_cmdline*
+g:vimdo#show_stdout_in_cmdline                    *g:vimdo#show_stdout_in_cmdline*
 
   Type: |boolean|
   Default: `0`
 
   Whether to print the stdout output to the cmdline.
 
-g:axe#float_term_height_pct                      *g:axe#float_term_height_pct*
+g:vimdo#float_term_height_pct                      *g:vimdo#float_term_height_pct*
 
   Type: |integer|
   Default: `30`
 
   The height of the floating terminal in percentage of the window height.
 
-g:axe#float_term_width_pct                        *g:axe#float_term_width_pct*
+g:vimdo#float_term_width_pct                        *g:vimdo#float_term_width_pct*
 
   Type: |integer|
   Default: `75`
 
   The width of the floating terminal in percentage of the window width.
 
-g:axe#float_term_height_max                      *g:axe#float_term_height_max*
+g:vimdo#float_term_height_max                      *g:vimdo#float_term_height_max*
 
   Type: |integer|
   Default: `30`
 
   The maximum height of the floating terminal.
 
-g:axe#float_term_width_max                        *g:axe#float_term_width_max*
+g:vimdo#float_term_width_max                        *g:vimdo#float_term_width_max*
 
   Type: |integer|
   Default: `80`
 
   The maximum width of the floating terminal.
 
-g:axe#float_term_height_min                      *g:axe#float_term_height_min*
+g:vimdo#float_term_height_min                      *g:vimdo#float_term_height_min*
 
   Type: |integer|
   Default: `15`
 
   The minimum height of the floating terminal.
 
-g:axe#float_term_width_min                        *g:axe#float_term_width_min*
+g:vimdo#float_term_width_min                        *g:vimdo#float_term_width_min*
 
   Type: |integer|
   Default: `40`
 
   The minimum width of the floating terminal.
 
-g:axe#float_term_anchor                              *g:axe#float_term_anchor*
+g:vimdo#float_term_anchor                              *g:vimdo#float_term_anchor*
 
   Type: |string|
   Default: `'SE'`
@@ -260,7 +260,7 @@ g:axe#float_term_anchor                              *g:axe#float_term_anchor*
   The corner of the terminal for which the coordinates are calculated. Valid
   options are `'NW'`, `'NE'`, `'SW'`, and `'SE'`.
 
-g:axe#float_term_relative                          *g:axe#float_term_relative*
+g:vimdo#float_term_relative                          *g:vimdo#float_term_relative*
 
   Type: |string|
   Default: `'win'`
@@ -268,7 +268,7 @@ g:axe#float_term_relative                          *g:axe#float_term_relative*
   The object the coordinates of the terminal corner should be calculated in
   relations to. Valid options are `'win'`, `'cursor'`, and `'editor'`.
 
-g:axe#open_term_in_float                            *g:axe#open_term_in_float*
+g:vimdo#open_term_in_float                            *g:vimdo#open_term_in_float*
 
   Type: |boolean|
   Default: `0`

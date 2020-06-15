@@ -4,13 +4,13 @@ scriptencoding "utf-8"
 " Find local environmental configuration and overwrite the system-wide
 " configuration, if any
 function! s:source_local_configuration()
-  if filereadable('./.axe.vim')
-    execute 'source .axe.vim'
+  if filereadable('./.vimdo.vim')
+    execute 'source .vimdo.vim'
   else
-    let l:root = axe#util#root()
+    let l:root = vimdo#util#root()
     if l:root !=# ''
-      if filereadable(l:root . '/.axe.vim')
-        execute 'source ' . l:root . '/.axe.vim'
+      if filereadable(l:root . '/.vimdo.vim')
+        execute 'source ' . l:root . '/.vimdo.vim'
       endif
     endif
   endif
@@ -23,14 +23,14 @@ function! s:new_split()
         \ 'right': 'botright vsplit',
         \ 'left': 'topleft vsplit',
         \ }
-  if has_key(l:split_directions, g:axe#split_direction)
+  if has_key(l:split_directions, g:vimdo#split_direction)
     " ' Execute' creates a new buffer for the execution to take place,
     " otherwise the current buffer will be replaced by the terminal
-    execute l:split_directions[g:axe#split_direction] . ' Execute'
-    if g:axe#split_direction ==# 'up' || g:axe#split_direction ==# 'down'
-      execute 'resize ' . g:axe#term_height
-    elseif g:axe#split_direction ==# 'left' || g:axe#split_direction ==# 'right'
-      execute 'vertical resize ' . g:axe#term_width
+    execute l:split_directions[g:vimdo#split_direction] . ' Execute'
+    if g:vimdo#split_direction ==# 'up' || g:vimdo#split_direction ==# 'down'
+      execute 'resize ' . g:vimdo#term_height
+    elseif g:vimdo#split_direction ==# 'left' || g:vimdo#split_direction ==# 'right'
+      execute 'vertical resize ' . g:vimdo#term_width
     endif
   endif
 
@@ -39,14 +39,14 @@ endfunction
 
 function! s:name_buffer(subtitle, with_subtitle)
     let l:bufnr = 0
-    let l:bufname = a:with_subtitle ? 'AXE: ' . a:subtitle : 'Axe'
+    let l:bufname = a:with_subtitle ? 'VimDo: ' . a:subtitle : 'VimDo'
 
     while bufname(l:bufname) ==# l:bufname
       let l:bufnr = l:bufnr + 1
       if a:with_subtitle
-        let l:bufname = 'AXE: ' . a:subtitle . ' (' . l:bufnr . ')'
+        let l:bufname = 'VimDo: ' . a:subtitle . ' (' . l:bufnr . ')'
       else
-        let l:bufname = 'AXE (' . l:bufnr . ')'
+        let l:bufname = 'VimDo (' . l:bufnr . ')'
       endif
     endwhile
 
@@ -62,9 +62,9 @@ function! s:job_stderr(job_id, data, event) dict
 endfunction
 
 function! s:term_job_exit(job_id, data, event) dict
-  let l:bufnr = g:axe#terminal_jobs[a:job_id][1]
-  unlet g:axe#terminal_jobs[a:job_id]
-  if g:axe#remove_term_buffer_when_done
+  let l:bufnr = g:vimdo#terminal_jobs[a:job_id][1]
+  unlet g:vimdo#terminal_jobs[a:job_id]
+  if g:vimdo#remove_term_buffer_when_done
     execute 'bd! ' . l:bufnr
   else
     close
@@ -72,18 +72,18 @@ function! s:term_job_exit(job_id, data, event) dict
 
   " remove float from the list of float-terms if possible
   let l:win_ids = []
-  for l:float_attr in items(g:axe#floats)
+  for l:float_attr in items(g:vimdo#floats)
     if l:float_attr[1].job_id ==# a:job_id
       let l:win_ids = add(l:win_ids, l:float_attr[0])
     endif
   endfor
   for l:win_id in l:win_ids
-    call axe#close_win(l:win_id)
+    call vimdo#close_win(l:win_id)
   endfor
 endfunction
 
 function! s:bg_job_exit(job_id, data, event) dict
-  let l:job_info = g:axe#background_jobs[a:job_id][1]
+  let l:job_info = g:vimdo#background_jobs[a:job_id][1]
   let l:stderr = l:job_info.stderr
   let l:stdout = l:job_info.stdout
   let l:opts = l:job_info.opts
@@ -97,22 +97,22 @@ function! s:bg_job_exit(job_id, data, event) dict
     endtry
 
     if l:opts.show_stdout_in_split
-      call s:print_to_split(g:axe#background_jobs[a:job_id][0], l:text)
+      call s:print_to_split(g:vimdo#background_jobs[a:job_id][0], l:text)
     elseif l:opts.show_stdout_in_float
       call s:print_to_float(l:text, l:opts.float_fit_content,
             \               l:opts.width_pct, l:opts.height_pct)
     elseif l:opts.show_stdout_in_cmdline
       call s:print_to_cmdline(l:text)
     else
-      echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited successfully'
+      echom 'VimDo: "' . g:vimdo#background_jobs[a:job_id][0] . '" exited successfully'
     endif
   elseif l:opts.show_stderr_on_error
     " redirect stderr output to a temporary buffer and show
     call s:print_to_split('stderr', l:stderr)
   else
-    echom 'AXE: "' . g:axe#background_jobs[a:job_id][0] . '" exited with error'
+    echom 'VimDo: "' . g:vimdo#background_jobs[a:job_id][0] . '" exited with error'
   endif
-  unlet g:axe#background_jobs[a:job_id]
+  unlet g:vimdo#background_jobs[a:job_id]
 endfunction
 
 function! s:new_job(opts, callback)
@@ -135,47 +135,47 @@ function! s:create_term_cmd(cmd)
   let l:cmd = '/bin/bash -c "' .
         \ 'trap : INT;' .
         \ l:subcmd .
-        \ 'printf \"' . g:axe#exit_message . '\"' .
+        \ 'printf \"' . g:vimdo#exit_message . '\"' .
         \ ';read -p \"\""'
   return l:cmd
 endfunction
 
 function! s:extract_cmd_opt(subcmd)
   " file type specific commands trump catch-all commands
-  if has_key(g:axe#cmds, &filetype) && has_key(g:axe#cmds, '*')
-    let l:extcmds = extend(deepcopy(g:axe#cmds['*']), g:axe#cmds[&filetype])
-  elseif has_key(g:axe#cmds, &filetype)
-    let l:extcmds = g:axe#cmds[&filetype]
-  elseif has_key(g:axe#cmds, '*')
-    let l:extcmds = g:axe#cmds['*']
+  if has_key(g:vimdo#cmds, &filetype) && has_key(g:vimdo#cmds, '*')
+    let l:extcmds = extend(deepcopy(g:vimdo#cmds['*']), g:vimdo#cmds[&filetype])
+  elseif has_key(g:vimdo#cmds, &filetype)
+    let l:extcmds = g:vimdo#cmds[&filetype]
+  elseif has_key(g:vimdo#cmds, '*')
+    let l:extcmds = g:vimdo#cmds['*']
   else
     let l:extcmds = {}
   endif
 
   let l:global_settings = {
-        \ 'exit_message': g:axe#exit_message,
-        \ 'term_height': g:axe#term_height,
-        \ 'term_width': g:axe#term_width,
-        \ 'remove_term_buffer_when_done': g:axe#remove_term_buffer_when_done,
-        \ 'with_filename': g:axe#with_filename,
-        \ 'in_term': g:axe#in_term,
-        \ 'exe_in_proj_root': g:axe#exe_in_proj_root,
-        \ 'show_stderr_on_error': g:axe#show_stderr_on_error,
-        \ 'show_stdout_in_split': g:axe#show_stdout_in_split,
-        \ 'show_stdout_in_float': g:axe#show_stdout_in_float,
-        \ 'show_stdout_in_cmdline': g:axe#show_stdout_in_cmdline,
-        \ 'float_term_height_pct': g:axe#float_term_height_pct,
-        \ 'float_term_width_pct': g:axe#float_term_width_pct,
-        \ 'float_term_height_max': g:axe#float_term_height_max,
-        \ 'float_term_width_max': g:axe#float_term_width_max,
-        \ 'float_term_height_min': g:axe#float_term_height_min,
-        \ 'float_term_width_min': g:axe#float_term_width_min,
-        \ 'float_term_anchor': g:axe#float_term_anchor,
-        \ 'float_term_relative': g:axe#float_term_relative,
-        \ 'open_term_in_float': g:axe#open_term_in_float,
+        \ 'exit_message': g:vimdo#exit_message,
+        \ 'term_height': g:vimdo#term_height,
+        \ 'term_width': g:vimdo#term_width,
+        \ 'remove_term_buffer_when_done': g:vimdo#remove_term_buffer_when_done,
+        \ 'with_filename': g:vimdo#with_filename,
+        \ 'in_term': g:vimdo#in_term,
+        \ 'exe_in_proj_root': g:vimdo#exe_in_proj_root,
+        \ 'show_stderr_on_error': g:vimdo#show_stderr_on_error,
+        \ 'show_stdout_in_split': g:vimdo#show_stdout_in_split,
+        \ 'show_stdout_in_float': g:vimdo#show_stdout_in_float,
+        \ 'show_stdout_in_cmdline': g:vimdo#show_stdout_in_cmdline,
+        \ 'float_term_height_pct': g:vimdo#float_term_height_pct,
+        \ 'float_term_width_pct': g:vimdo#float_term_width_pct,
+        \ 'float_term_height_max': g:vimdo#float_term_height_max,
+        \ 'float_term_width_max': g:vimdo#float_term_width_max,
+        \ 'float_term_height_min': g:vimdo#float_term_height_min,
+        \ 'float_term_width_min': g:vimdo#float_term_width_min,
+        \ 'float_term_anchor': g:vimdo#float_term_anchor,
+        \ 'float_term_relative': g:vimdo#float_term_relative,
+        \ 'open_term_in_float': g:vimdo#open_term_in_float,
         \ }
 
-  let l:filetype_defaults = get(g:axe#filetype_defaults, &filetype, {})
+  let l:filetype_defaults = get(g:vimdo#filetype_defaults, &filetype, {})
   let l:cmd = extend(deepcopy(l:filetype_defaults), l:extcmds[a:subcmd], 'force')
   return extend(l:global_settings, l:cmd, 'force')
 endfunction
@@ -237,7 +237,7 @@ function! s:print_to_float(text, fitcontent, width_pct, height_pct)
   let l:win_id =  nvim_open_win(l:scratch, 0, l:opts)
 
   let l:close_win = printf('s:close_win(%s)', l:win_id)
-  augroup AxeCloseFloatWin
+  augroup VimDoCloseFloatWin
     autocmd!
     execute 'autocmd CursorMoved,CursorMovedI,InsertEnter <buffer> call ' . l:close_win
     execute 'autocmd BufEnter * call ' . l:close_win
@@ -246,19 +246,19 @@ endfunction
 
 function! s:close_win(win_id)
   call nvim_win_close(str2nr(a:win_id), v:true)
-  augroup AxeCloseFloatWin
+  augroup VimDoCloseFloatWin
     autocmd!
   augroup END
 endfunction
 
-function! axe#close_win(win_id)
-  if has_key(g:axe#floats, a:win_id) && has('nvim-0.4')
+function! vimdo#close_win(win_id)
+  if has_key(g:vimdo#floats, a:win_id) && has('nvim-0.4')
     try
       call nvim_win_close(str2nr(a:win_id), v:true)
     catch /Invalid window id/
     endtry
-    call nvim_win_close(str2nr(g:axe#floats[a:win_id].bg_id), v:true)
-    unlet g:axe#floats[a:win_id]
+    call nvim_win_close(str2nr(g:vimdo#floats[a:win_id].bg_id), v:true)
+    unlet g:vimdo#floats[a:win_id]
   else
     echom 'No matching floating window found'
   endif
@@ -271,7 +271,7 @@ function! s:open_float_term(cmd, term_opts, configs)
   let l:width = (a:configs.float_term_width_pct * winwidth(0)) / 100
   let l:width = min([max([l:width, a:configs.float_term_width_min]),
         \            a:configs.float_term_width_max])
-  let l:height = (g:axe#float_term_height_pct * winheight(0)) / 100
+  let l:height = (g:vimdo#float_term_height_pct * winheight(0)) / 100
   let l:height = min([max([l:height, a:configs.float_term_height_min]),
         \             a:configs.float_term_height_max])
 
@@ -285,7 +285,7 @@ function! s:open_float_term(cmd, term_opts, configs)
   let l:bg_opts = {
         \ 'anchor': a:configs.float_term_anchor,
         \ 'style': 'minimal',
-        \ 'relative': g:axe#float_term_relative,
+        \ 'relative': g:vimdo#float_term_relative,
         \ 'width': l:width + 2,
         \ 'height': l:height + 2,
         \ 'row': l:bg_row,
@@ -330,7 +330,7 @@ function! s:print_to_split(subcmd, text)
   resize 10
 endfunction
 
-function! axe#execute_subcmd(subcmd)
+function! vimdo#execute_subcmd(subcmd)
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
 
@@ -344,9 +344,9 @@ function! axe#execute_subcmd(subcmd)
 
     let l:root = ''
     if l:cmd_opts.exe_in_proj_root
-      let l:root = axe#util#root()
+      let l:root = vimdo#util#root()
       if l:root !=# ''
-        execute 'cd' axe#util#root()
+        execute 'cd' vimdo#util#root()
       endif
     endif
 
@@ -365,10 +365,10 @@ function! axe#execute_subcmd(subcmd)
       if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
         if l:cmd_opts.in_term
           if has('nvim-0.2')
-            if g:axe#open_term_in_float && has('nvim-0.4')
+            if g:vimdo#open_term_in_float && has('nvim-0.4')
               let l:job_attr = s:open_float_term(l:cmd, l:job, l:cmd_opts)
               let l:job_id = l:job_attr.job_id
-              let g:axe#floats[l:job_attr.win_id] = {
+              let g:vimdo#floats[l:job_attr.win_id] = {
                     \ 'job_id': l:job_attr.job_id,
                     \ 'cmd': l:raw_cmd,
                     \ 'bg_id': l:job_attr.bg_id
@@ -378,14 +378,14 @@ function! axe#execute_subcmd(subcmd)
               let l:job_id = termopen(l:cmd, l:job)
             endif
             let l:bufnr = bufnr('%')
-            let g:axe#terminal_jobs[l:job_id] = [l:job, l:bufnr]
+            let g:vimdo#terminal_jobs[l:job_id] = [l:job, l:bufnr]
             call s:name_buffer(l:filename, l:cmd_opts.with_filename)
           else
             echom 'Terminal execution requires neovim >= 0.2'
           endif
         else
           let l:job_id = jobstart(l:cmd, l:job)
-          let g:axe#background_jobs[l:job_id] = [a:subcmd, l:job]
+          let g:vimdo#background_jobs[l:job_id] = [a:subcmd, l:job]
         endif
       endif
     endif
@@ -407,13 +407,13 @@ endfunction
 " returns a list of defined commands
 function! s:list_commands()
   let l:filetype = &filetype
-  if has_key(g:axe#cmds, l:filetype) && has_key(g:axe#cmds, '*')
-    let l:cmd_dicts = extend(deepcopy(g:axe#cmds['*']), g:axe#cmds[l:filetype])
+  if has_key(g:vimdo#cmds, l:filetype) && has_key(g:vimdo#cmds, '*')
+    let l:cmd_dicts = extend(deepcopy(g:vimdo#cmds['*']), g:vimdo#cmds[l:filetype])
     let l:cmd = keys(l:cmd_dicts)
-  elseif has_key(g:axe#cmds, l:filetype)
-    let l:cmds = keys(g:axe#cmds[l:filetype])
-  elseif has_key(g:axe#cmds, '*')
-    let l:cmds = keys(g:axe#cmds['*'])
+  elseif has_key(g:vimdo#cmds, l:filetype)
+    let l:cmds = keys(g:vimdo#cmds[l:filetype])
+  elseif has_key(g:vimdo#cmds, '*')
+    let l:cmds = keys(g:vimdo#cmds['*'])
   else
     let l:cmds = []
   endif
@@ -421,30 +421,30 @@ function! s:list_commands()
 endfunction
 
 " List all currently defined commands for this file type
-function! axe#list_commands()
-  echom ':AxeListCmds'
+function! vimdo#list_commands()
+  echom ':VimDoListCmds'
   for cmd in s:list_commands()
     echom '  ' . cmd
   endfor
 endfunction
 
-" completion function for Axe
-function! axe#complete_commands(ArgLead, CmdLine, CursorPos)
+" completion function for VimDo
+function! vimdo#complete_commands(ArgLead, CmdLine, CursorPos)
   return join(s:list_commands(), "\n")
 endfunction
 
-function! axe#complete_procs(ArgLead, CmdLine, CursorPos)
+function! vimdo#complete_procs(ArgLead, CmdLine, CursorPos)
   let l:procs = []
-  for l:proc in items(g:axe#background_jobs)
+  for l:proc in items(g:vimdo#background_jobs)
     let l:job_id = l:proc[0]
     let l:procs = add(l:procs, l:job_id)
   endfor
   return join(l:procs, "\n")
 endfunction
 
-function! axe#complete_floats(ArgLead, CmdLine, CursorPos)
+function! vimdo#complete_floats(ArgLead, CmdLine, CursorPos)
   let l:floats = []
-  for l:win in items(g:axe#floats)
+  for l:win in items(g:vimdo#floats)
     let l:win_id = l:win[0]
     let l:floats = add(l:floats, l:win_id)
   endfor
@@ -453,11 +453,11 @@ endfunction
 
 " TODO: Make output adapt to id length
 " TODO: Merge list_floats and list_background_processes
-function! axe#list_floats()
-  if g:axe#floats !=# {}
-    echom ':AxeListFloats'
+function! vimdo#list_floats()
+  if g:vimdo#floats !=# {}
+    echom ':VimDoListFloats'
     echom '  #      Command'
-    for l:win in items(g:axe#floats)
+    for l:win in items(g:vimdo#floats)
       let l:win_id = l:win[0]
       let l:cmd = l:win[1].cmd
       echom '  ' . l:win_id . '   ' . l:cmd
@@ -467,11 +467,11 @@ function! axe#list_floats()
   endif
 endfunction
 
-function! axe#list_background_processes()
-  if g:axe#background_jobs !=# {}
-    echom ':AxeListProcs'
+function! vimdo#list_background_processes()
+  if g:vimdo#background_jobs !=# {}
+    echom ':VimDoListProcs'
     echom '  #   Command'
-    for l:proc in items(g:axe#background_jobs)
+    for l:proc in items(g:vimdo#background_jobs)
       let l:job_id = l:proc[0]
       let l:cmd = l:proc[1][0]
       echom '  ' . l:job_id . '   ' . l:cmd
@@ -481,9 +481,9 @@ function! axe#list_background_processes()
   endif
 endfunction
 
-function! axe#stop_process(job_id)
+function! vimdo#stop_process(job_id)
   if has('nvim')
-    if has_key(g:axe#background_jobs, a:job_id)
+    if has_key(g:vimdo#background_jobs, a:job_id)
       call jobstop(str2nr(a:job_id))
     else
       echom 'No matching process found'

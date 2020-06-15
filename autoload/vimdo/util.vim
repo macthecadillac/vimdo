@@ -1,20 +1,20 @@
-function! axe#util#filename()
+function! vimdo#util#filename()
   return expand('%:p')
 endfunction
 
-function! axe#util#path()
+function! vimdo#util#path()
   return getcwd()
 endfunction
 
-function! axe#util#line()
+function! vimdo#util#line()
   return line('.')
 endfunction
 
-function! axe#util#col()
+function! vimdo#util#col()
   return col('.')
 endfunction
 
-function! axe#util#root()
+function! vimdo#util#root()
   if globpath('.', '.git') ==# './.git'
     let l:gitdir = getcwd()
     " Return working directory to the original value
@@ -25,6 +25,6 @@ function! axe#util#root()
     return ''
   else
     execute 'cd' fnameescape('..')
-    return axe#util#root()
+    return vimdo#util#root()
   endif
 endfunction
