@@ -79,7 +79,6 @@ function! s:term_job_exit(job_id, data, event) dict
   endfor
   for l:win_id in l:win_ids
     call axe#close_win(l:win_id)
-    unlet g:axe#floats[l:win_id]
   endfor
 endfunction
 
