@@ -1,3 +1,6 @@
+set encoding=utf8
+scriptencoding "utf-8"
+
 " Find local environmental configuration and overwrite the system-wide
 " configuration, if any
 function! s:source_local_configuration()
@@ -67,15 +70,16 @@ function! s:term_job_exit(job_id, data, event) dict
     close
   endif
 
-  " remove float from the list for float-terms
-  let l:job_ids = []
-  for l:float in items(g:axe#floats)
-    if l:float[1].job_id ==# a:job_id
-      let l:job_ids = add(l:job_ids, l:float[0])
+  " remove float from the list of float-terms if possible
+  let l:win_ids = []
+  for l:float_attr in items(g:axe#floats)
+    if l:float_attr[1].job_id ==# a:job_id
+      let l:win_ids = add(l:win_ids, l:float_attr[0])
     endif
   endfor
-  for l:job_id in l:job_ids
-    unlet g:axe#floats[l:job_id]
+  for l:win_id in l:win_ids
+    call axe#close_win(l:win_id)
+    unlet g:axe#floats[l:win_id]
   endfor
 endfunction
 
@@ -243,7 +247,11 @@ endfunction
 
 function! axe#close_win(win_id)
   if has_key(g:axe#floats, a:win_id)
-    call nvim_win_close(str2nr(a:win_id), v:true)
+    try
+      call nvim_win_close(str2nr(a:win_id), v:true)
+    catch /Invalid window id/
+    endtry
+    call nvim_win_close(str2nr(g:axe#floats[a:win_id].bg_id), v:true)
   else
     echom 'No matching floating window found'
   endif
@@ -251,23 +259,60 @@ endfunction
 
 function! s:open_float_term(cmd, opts)
   let l:buf = nvim_create_buf(v:false, v:true)
+  let l:bg_buf = nvim_create_buf(v:false, v:true)
+
   let l:width = (g:axe#float_term_width_pct * winwidth(0)) / 100
+  let l:width = min([max([l:width, g:axe#float_term_width_min]),
+        \            g:axe#float_term_width_max])
   let l:height = (g:axe#float_term_height_pct * winheight(0)) / 100
+  let l:height = min([max([l:height, g:axe#float_term_height_min]),
+        \             g:axe#float_term_height_max])
+
+  let l:bg_top = '╭' . repeat('─', l:width) . '╮'
+  let l:bg_side = '│' . repeat(' ', l:width) . '│'
+  let l:bg_bottom = '╰' . repeat('─', l:width) . '╯'
+  let l:bg_row = winheight(0)
+  let l:bg_col = winwidth(0)
+
+  " set up the background
+  let l:bg_opts = {
+        \ 'anchor': g:axe#float_term_anchor,
+        \ 'style': 'minimal',
+        \ 'relative': g:axe#float_term_relative,
+        \ 'width': l:width + 2,
+        \ 'height': l:height + 2,
+        \ 'row': l:bg_row,
+        \ 'col': l:bg_col,
+        \ 'focusable': v:false,
+        \ }
+  let l:bg = [l:bg_top] + repeat([l:bg_side], l:height) + [l:bg_bottom]
+  call nvim_buf_set_lines(l:bg_buf, 0, -1, v:true, l:bg)
+  let l:bg_id = nvim_open_win(l:bg_buf, 0, l:bg_opts)
+  " set border region highlight color
+  call nvim_set_current_win(l:bg_id)
+  setlocal winhl=Normal:Normal
+
+  " set up the main terminal
   let l:opts = {
         \ 'anchor': g:axe#float_term_anchor,
         \ 'style': 'minimal',
         \ 'relative': g:axe#float_term_relative,
-        \ 'width': min([max([l:width, g:axe#float_term_width_min]),
-        \               g:axe#float_term_width_max]),
-        \ 'height': min([max([l:height, g:axe#float_term_height_min]),
-        \                g:axe#float_term_height_max]),
-        \ 'row': winheight(0) - 1,
-        \ 'col': winwidth(0) - 1,
+        \ 'width': l:width,
+        \ 'height': l:height,
+        \ 'row': l:bg_row - 1,
+        \ 'col': l:bg_col - 1,
         \ 'focusable': v:true,
         \ }
   let l:win_id = nvim_open_win(l:buf, 0, l:opts)
+  " set terminal highlight color
   call nvim_set_current_win(l:win_id)
-  return {'win_id': l:win_id, 'job_id': termopen(a:cmd, a:opts)}
+  setlocal winhl=Normal:Normal
+
+  return {
+      \ 'win_id': l:win_id,
+      \ 'job_id': termopen(a:cmd, a:opts),
+      \ 'bg_id': l:bg_id
+      \ }
 endfunction
 
 function! s:print_to_split(subcmd, text)
@@ -325,7 +370,8 @@ function! axe#execute_subcmd(subcmd)
           let l:job_id = l:job_attr.job_id
           let g:axe#floats[l:job_attr.win_id] = {
                 \ 'job_id': l:job_attr.job_id,
-                \ 'cmd': l:raw_cmd
+                \ 'cmd': l:raw_cmd,
+                \ 'bg_id': l:job_attr.bg_id
                 \ }
         else
           call s:new_split()
