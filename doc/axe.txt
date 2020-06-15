@@ -14,8 +14,14 @@ based on file type.
 *AxeProcs*      - List all background processes launched through |Axe|
                 (those that run not in the terminal but in the background)
 *AxeStop*       - Terminate process with the provided process number.
-                `Axe {#}` where `#` is the process number listed by
+                `AxeStop {#}` where `#` is the process number listed by
                 |AxeListProcs|.
+
+*AxeFloats*     - List all the float terminals opened by |Axe|.
+
+*AxeCloseFloat* - Close the floating window with the provided window ID.
+                `AxeCloseFloat {#}` where `#` is the window ID listed by
+                |AxeFloats|.
 
 
 ------------------------------------------------------------------------------
@@ -32,26 +38,17 @@ configurations.
 
 g:axe#cmds                                                        *g:axe#cmds*
 
-  This is a |dictionary| that maps |Axe| sub-commands to shell commands. The
-  dictionary must contain keys (as |string|'s) that are vim |filetype|'s. The
-  value of the each entry is another |dictionary| that contains the following
-  four entries:
-  
+  All hooks reside in `g:axe#cmds`. It is a dictionary that maps `Axe`
+  sub-commands to shell commands. The dictionary must contain keys (as
+  `string`'s) that are vim `filetype`'s. The value of the each entry is
+  another dictionary that must contain this entry:
+
     `cmd`              |string| The command to be invoked
-    `with_filename`    |boolean| Supply the command with the file name (append
-                     to the command) if set to 1, run the command without the
-                     file name if set to 0. (Default is 1)
-    `in_term`          |boolean| Run the command in the terminal if set to 1, run
-                     in the background if set to 0. (Default is 0)
-    `exe_in_proj_root` |boolean| Execute in the root of the project where the
-                     .git directory is found. (Default is 0)
   
-  Of the four entries, `cmd` is mandatory (for obvious reasons). The other
-  three are optional. When they are not specified, the default values are used
-  (see above). These global defaults could be overridden either as a global
-  option or on a per filetype basis. See |g:axe#filetype_defaults|,
-  |g:axe#with_filename|, |g:axe#in_term| and |g:axe#exe_in_proj_root|.
-  
+  Aside from `cmd`, you can include any valid configuration keys (without the
+  `'axe#'` prefix) in the dictionary and these will have precedence over the
+  global/file type configurations.
+
   Instead of being specific file types, the first level keys could optionally
   be a wildcard, in this case `'*'` that serves as a catch-all and the command
   will henceforth be defined for all file types. Notice that file type
@@ -101,15 +98,8 @@ g:axe#filetype_defaults                              *g:axe#filetype_defaults*
   Default: `{}`
 
   This option sets the behavior of the executor on a per filetype basis. The
-  dictionary could have the following keys:
-
-  `with_filename`    |boolean| Supply the command with the file name (append
-                   to the command) if set to 1, run the command without the
-                   file name if set to 0.
-  `in_term`          |boolean| Run the command in the terminal if set to 1, run
-                   in the background if set to 0.
-  `exe_in_proj_root` |boolean| Execute in the root of the project where the
-                   .git directory is found.
+  dictionary could contain any of the configuration entries (without the
+  `'axe#'` prefix).
 
   Example: >
   
@@ -190,5 +180,99 @@ g:axe#remove_term_buffer_when_done
 
   For terminal commands, this option determines whether the buffer in which
   the terminal was run should be discarded when the command exits.
+
+g:axe#show_stderr_on_error                        *g:axe#show_stderr_on_error*
+
+  Type: |boolean|
+  Default: `1`
+
+  For background commands, this option determines whether to show stderr when
+  the command exited with an error.
+
+g:axe#show_stdout_in_split                        *g:axe#show_stdout_in_split*
+
+  Type: |boolean|
+  Default: `0`
+
+  Whether to pipe the output from stdout to a split.
+
+g:axe#show_stdout_in_float                        *g:axe#show_stdout_in_float*
+
+  Type: |boolean|
+  Default: `0`
+
+  Whether to show the output of stdout in a floating window.
+
+g:axe#show_stdout_in_cmdline                    *g:axe#show_stdout_in_cmdline*
+
+  Type: |boolean|
+  Default: `0`
+
+  Whether to print the stdout output to the cmdline.
+
+g:axe#float_term_height_pct                      *g:axe#float_term_height_pct*
+
+  Type: |integer|
+  Default: `30`
+
+  The height of the floating terminal in percentage of the window height.
+
+g:axe#float_term_width_pct                        *g:axe#float_term_width_pct*
+
+  Type: |integer|
+  Default: `75`
+
+  The width of the floating terminal in percentage of the window width.
+
+g:axe#float_term_height_max                      *g:axe#float_term_height_max*
+
+  Type: |integer|
+  Default: `30`
+
+  The maximum height of the floating terminal.
+
+g:axe#float_term_width_max                        *g:axe#float_term_width_max*
+
+  Type: |integer|
+  Default: `80`
+
+  The maximum width of the floating terminal.
+
+g:axe#float_term_height_min                      *g:axe#float_term_height_min*
+
+  Type: |integer|
+  Default: `15`
+
+  The minimum height of the floating terminal.
+
+g:axe#float_term_width_min                        *g:axe#float_term_width_min*
+
+  Type: |integer|
+  Default: `40`
+
+  The minimum width of the floating terminal.
+
+g:axe#float_term_anchor                              *g:axe#float_term_anchor*
+
+  Type: |string|
+  Default: `'SE'`
+
+  The corner of the terminal for which the coordinates are calculated. Valid
+  options are `'NW'`, `'NE'`, `'SW'`, and `'SE'`.
+
+g:axe#float_term_relative                          *g:axe#float_term_relative*
+
+  Type: |string|
+  Default: `'win'`
+
+  The object the coordinates of the terminal corner should be calculated in
+  relations to. Valid options are `'win'`, `'cursor'`, and `'editor'`.
+
+g:axe#open_term_in_float                            *g:axe#open_term_in_float*
+
+  Type: |boolean|
+  Default: `0`
+
+  Whether to open the terminal in a floating window.
 
   vim:tw=78:ts=4:ft=help:norl:

@@ -1,15 +1,15 @@
 # Axe -- Asynchronous Executor
 
 A configurable plugin to execute external commands in the built-in terminal
-based on file type. This is a rewrite of an unpublished plugin I wrote during
-the vim 7.4 days before async was around. The old incarnation was written in a
-mixture of python and shell to bypass the inability of vim to launch processes
-off the main thread, a situation that has since been ameliorated by the launch
-of neovim, and later, the release of vim version 8.
+based on file type. This is a rewrite of an unpublished plugin I wrote before
+async was around. The old incarnation was written in a mixture of python and
+shell to bypass the inability of vim to launch processes off the main thread, a
+situation that has since been ameliorated by the launch of neovim.
 
 ## Requirements
 
-Neovim >= 0.2
+Neovim >= `0.2` for most of the stuff to work. Version `0.4` or above
+recommended.
 
 ## Installation
 
@@ -36,6 +36,11 @@ type
 `AxeStop`: Terminate process with the provided process number.  `AxeStop
 {#}` where `#` is the process number listed by `AxeListProcs`.
 
+`AxeFloats`: List all the float terminals opened by `Axe`.
+
+`AxeCloseFloat`: Close the floating window with the provided window ID.
+`AxeCloseFloat {#}` where `#` is the window ID listed by `AxeFloats`.
+
 ## Configuration
 
 Configurations can be global or local. Global configurations reside in your
@@ -49,22 +54,12 @@ always have precedence over global configurations.
 All hooks reside in `g:axe#cmds`. It is a dictionary that maps
 `Axe` sub-commands to shell commands. The dictionary must contain keys (as
 `string`'s) that are vim `filetype`'s. The value of the each entry is another
-dictionary that contains the following four entries:
+dictionary that must contain this entry:
 
   - `cmd`: `string` The command to be invoked
-  - `with_filename`: `boolean` Supply the command with the file name (append to
-    the command) if set to `1`, run the command without the file name if set to
-    `0`. (Default is 1)
-  - `in_term`: `boolean` Run the command in the terminal if set to `1`, run in the
-    background if set to `0`. (Default is 0)
-  - `exe_in_proj_root`: `boolean` Execute in the root of the project where the
-    `.git` directory is found. (Default is 0)
-  - `show_stderr_on_error`: `boolean` Show the stderr output in a split if the
-    process exits with error. (Default is 1)
 
-Of all the entries, `cmd` is mandatory (for obvious reasons). The rest are
-optional. When they are not specified, the default values are used (see above).
-New defaults could be set (see the documentation).
+Aside from `cmd`, you can include any valid configuration keys in the dictionary
+and these will have precedence over the global/file type configurations.
 
 Instead of being specific file types, the first level keys could optionally be a
 wildcard, in this case `*` that serves as a catch-all, and all its commands will
