@@ -177,18 +177,16 @@ function! s:build_cmd(cmd)
     let l:cmd = ''
   endtry
 
-  let l:i = 1
-  while l:i < len(a:cmd)
+  for l:item in a:cmd[1:]
     " try to treat the element as a function reference and call it
     try
-      let l:cmd .= ' ' . function(a:cmd[l:i])()
+      let l:cmd .= ' ' . function(l:item)()
     " if the element can't be called, it must be an ordinary command line
     " argument
     catch /.*/
-      let l:cmd .= ' ' . a:cmd[l:i]
+      let l:cmd .= ' ' . l:item
     endtry
-    let l:i += 1
-  endwhile
+  endfor
 
   return l:cmd
 endfunction
@@ -206,11 +204,9 @@ function! s:print_to_float(text, fitcontent)
   if a:fitcontent
     " `max . map len` in the handicapped language of vimscript
     let l:widths = []
-    let l:i = 0
-    while l:i < len(a:text)
-      let l:widths = add(l:widths, len(a:text[l:i]))
-      let l:i += 1
-    endwhile
+    for l:line in a:text
+      let l:widths = add(l:widths, len(l:line))
+    endfor
 
     let l:opts.relative = 'cursor'
     let l:width = max(l:widths)
