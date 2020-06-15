@@ -252,6 +252,7 @@ function! axe#close_win(win_id)
     catch /Invalid window id/
     endtry
     call nvim_win_close(str2nr(g:axe#floats[a:win_id].bg_id), v:true)
+    unlet g:axe#floats[a:win_id]
   else
     echom 'No matching floating window found'
   endif
