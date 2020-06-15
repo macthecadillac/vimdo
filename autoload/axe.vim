@@ -74,10 +74,10 @@ function! s:bg_job_exit(job_id, data, event) dict
   let l:stdout = l:job_info.stdout
   if l:stderr ==# ['']
     let l:stdout_opts = l:job_info.stdout_opts
-    let l:post_execution = l:job_info.post_execution
+    let l:callback = l:job_info.callback
 
     try
-      let l:text = function(l:post_execution, [l:stdout])()
+      let l:text = function(l:callback, [l:stdout])()
     catch /.*/
       let l:text = l:stdout
     endtry
@@ -100,7 +100,7 @@ function! s:bg_job_exit(job_id, data, event) dict
   unlet g:axe#background_jobs[a:job_id]
 endfunction
 
-function! s:new_job(term, stdout_opts, show_stderr, post_execution)
+function! s:new_job(term, stdout_opts, show_stderr, callback)
   let l:exit_func = a:term ? 's:term_job_exit' : 's:bg_job_exit'
   return {
         \ 'stdout': [],
@@ -110,7 +110,7 @@ function! s:new_job(term, stdout_opts, show_stderr, post_execution)
         \ 'on_exit': function(l:exit_func),
         \ 'stdout_opts': a:stdout_opts,
         \ 'show_stderr': a:show_stderr,
-        \ 'post_execution': a:post_execution
+        \ 'callback': a:callback
         \ }
 endfunction
 
@@ -290,17 +290,17 @@ function! axe#execute_subcmd(subcmd)
           \ 'show_in_cmdline': l:cmd_opts.show_stdout_in_cmdline,
           \ }
 
-    if has_key(l:cmd_opts, 'post_execution')
-      let l:post_execution = l:cmd_opts.post_execution
+    if has_key(l:cmd_opts, 'callback')
+      let l:callback = l:cmd_opts.callback
     else
-      let l:post_execution = ''
+      let l:callback = ''
     endif
 
     let l:job = s:new_job(
           \ l:cmd_opts.in_term,
           \ l:stdout_opts,
           \ l:cmd_opts.show_stderr_on_error,
-          \ l:post_execution
+          \ l:callback
           \ )
 
     if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
