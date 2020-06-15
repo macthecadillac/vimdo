@@ -372,7 +372,7 @@ endfunction
 
 " List all currently defined commands for this file type
 function! axe#list_commands()
-  echom ':ExtCmdListCmds'
+  echom ':AxeListCmds'
   for cmd in s:list_commands()
     echom '  ' . cmd
   endfor
@@ -383,11 +383,29 @@ function! axe#complete_commands(ArgLead, CmdLine, CursorPos)
   return join(s:list_commands(), "\n")
 endfunction
 
+function! axe#complete_procs(ArgLead, CmdLine, CursorPos)
+  let l:procs = []
+  for l:proc in items(g:axe#background_jobs)
+    let l:job_id = l:proc[0]
+    let l:procs = add(l:procs, l:job_id)
+  endfor
+  return join(l:procs, "\n")
+endfunction
+
+function! axe#complete_floats(ArgLead, CmdLine, CursorPos)
+  let l:floats = []
+  for l:win in items(g:axe#floats)
+    let l:win_id = l:win[0]
+    let l:floats = add(l:floats, l:win_id)
+  endfor
+  return join(l:floats, "\n")
+endfunction
+
 " TODO: Make output adapt to id length
 " TODO: Merge list_floats and list_background_processes
 function! axe#list_floats()
   if g:axe#floats !=# {}
-    echom ':ExtCmdListFloats'
+    echom ':AxeListFloats'
     echom '  #      Command'
     for l:win in items(g:axe#floats)
       let l:win_id = l:win[0]
@@ -401,7 +419,7 @@ endfunction
 
 function! axe#list_background_processes()
   if g:axe#background_jobs !=# {}
-    echom ':ExtCmdListProcs'
+    echom ':AxeListProcs'
     echom '  #   Command'
     for l:proc in items(g:axe#background_jobs)
       let l:job_id = l:proc[0]

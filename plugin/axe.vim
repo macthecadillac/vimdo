@@ -39,5 +39,6 @@ let g:axe#open_term_in_float = get(g:, 'axe#open_term_in_float', 0)
 
 command! -nargs=1 -complete=custom,axe#complete_commands Axe call axe#execute_subcmd(<f-args>)
 command! AxeProcs call axe#list_background_processes()
-command! -nargs=1 AxeStop call axe#stop_process(<f-args>)
+command! -nargs=1 -complete=custom,axe#complete_procs AxeStop call axe#stop_process(<f-args>)
+command! -nargs=1 -complete=custom,axe#complete_floats AxeCloseFloat call axe#close_win(<f-args>)
 command! AxeList call axe#list_commands()
