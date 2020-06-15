@@ -66,6 +66,17 @@ function! s:term_job_exit(job_id, data, event) dict
   else
     close
   endif
+
+  " remove float from the list for float-terms
+  let l:job_ids = []
+  for l:float in items(g:axe#floats)
+    if l:float[1].job_id ==# a:job_id
+      let l:job_ids = add(l:job_ids, l:float[0])
+    endif
+  endfor
+  for l:job_id in l:job_ids
+    unlet g:axe#floats[l:job_id]
+  endfor
 endfunction
 
 function! s:bg_job_exit(job_id, data, event) dict
@@ -219,7 +230,7 @@ function! s:print_to_float(text, fitcontent)
   call nvim_buf_set_lines(l:scratch, 0, -1, v:true, a:text)
   let l:win_id =  nvim_open_win(l:scratch, 0, l:opts)
 
-  let l:close_win = printf('s:close_win(%s)', l:win_id)
+  let l:close_win = printf('axe#close_win(%s)', l:win_id)
   augroup AxeCloseFloatWin
     autocmd!
     execute 'autocmd CursorMoved,CursorMovedI,InsertEnter <buffer> call ' . l:close_win
@@ -227,11 +238,15 @@ function! s:print_to_float(text, fitcontent)
   augroup END
 endfunction
 
-function! s:close_win(win_id)
-  call nvim_win_close(a:win_id, v:true)
-  augroup AxeCloseFloatWin
-    autocmd!
-  augroup END
+function! axe#close_win(win_id)
+  if has_key(g:axe#floats, a:win_id)
+    call nvim_win_close(str2nr(a:win_id), v:true)
+    augroup AxeCloseFloatWin
+      autocmd!
+    augroup END
+  else
+    echom 'No matching floating window found'
+  endif
 endfunction
 
 function! s:open_float_term(cmd, opts)
