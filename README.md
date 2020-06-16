@@ -1,4 +1,4 @@
-# VimDo -- Asynchronous Executor
+# Vimdo -- Asynchronous Executor
 
 A configurable plugin to execute external commands asynchronously. This is a
 rewrite of an unpublished plugin I wrote before async was around.
@@ -32,24 +32,24 @@ Plug 'macthecadillac/vimdo'
 
 The following commands are available:
 
-`VimDo`: `VimDo {cmd}` where `cmd` is the sub-command you defined (see the
+`Vimdo`: `Vimdo {cmd}` where `cmd` is the sub-command you defined (see the
 section below). This will execute the command you configured.
 
-`VimDoList`: List all the defined sub-commands available for the current file
+`VimdoList`: List all the defined sub-commands available for the current file
 type
 
-`VimDoProcs`: List all background processes launched through `VimDo`
+`VimdoProcs`: List all background processes launched through `Vimdo`
 (those that run not in the terminal but in the background)
 
-`VimDoStop`: Terminate process with the provided process number.  `VimDoStop
-{#}` where `#` is the process number listed by `VimDoListProcs`.
+`VimdoStop`: Terminate process with the provided process number.  `VimdoStop
+{#}` where `#` is the process number listed by `VimdoListProcs`.
 
-`VimDoFloats`: List all the float terminals opened by `VimDo`.
+`VimdoFloats`: List all the float terminals opened by `Vimdo`.
 
-`VimDoCloseFloat`: Close the floating window with the provided window ID.
-`VimDoCloseFloat {#}` where `#` is the window ID listed by `VimDoFloats`.
+`VimdoCloseFloat`: Close the floating window with the provided window ID.
+`VimdoCloseFloat {#}` where `#` is the window ID listed by `VimdoFloats`.
 
-`VimDoBang`: `VimDoBang {cmd}` where `cmd` is a shell command. This is an
+`VimdoBang`: `VimdoBang {cmd}` where `cmd` is a shell command. This is an
 asynchronous version of the usual vim bang command. This follows the global
 configuration.
 
@@ -64,7 +64,7 @@ always have precedence over global configurations.
 ### Hooks to shell commands
 
 All hooks reside in `g:vimdo#cmds`. It is a dictionary that maps
-`VimDo` sub-commands to shell commands. The dictionary must contain keys (as
+`Vimdo` sub-commands to shell commands. The dictionary must contain keys (as
 `string`'s) that are vim `filetype`'s. The value of the each entry is another
 dictionary that must contain this entry:
 

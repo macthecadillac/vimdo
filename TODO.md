@@ -3,5 +3,5 @@
 - [ ] stdout float option for output that use a default geometry instead of
   fitting to content
 - [ ] vim8 support
-- [ ] Separate config for VimDoBang
-- [ ] Perhaps more VimDoBangxx commands for different presets
+- [ ] Separate config for VimdoBang
+- [ ] Perhaps more VimdoBangxx commands for different presets

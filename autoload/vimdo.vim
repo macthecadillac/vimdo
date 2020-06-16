@@ -39,14 +39,14 @@ endfunction
 
 function! s:name_buffer(subtitle, with_subtitle)
     let l:bufnr = 0
-    let l:bufname = a:with_subtitle ? 'VimDo: ' . a:subtitle : 'VimDo'
+    let l:bufname = a:with_subtitle ? 'Vimdo: ' . a:subtitle : 'Vimdo'
 
     while bufname(l:bufname) ==# l:bufname
       let l:bufnr = l:bufnr + 1
       if a:with_subtitle
-        let l:bufname = 'VimDo: ' . a:subtitle . ' (' . l:bufnr . ')'
+        let l:bufname = 'Vimdo: ' . a:subtitle . ' (' . l:bufnr . ')'
       else
-        let l:bufname = 'VimDo (' . l:bufnr . ')'
+        let l:bufname = 'Vimdo (' . l:bufnr . ')'
       endif
     endwhile
 
@@ -104,13 +104,13 @@ function! s:bg_job_exit(job_id, data, event) dict
     elseif l:opts.show_stdout_in_cmdline
       call s:print_to_cmdline(l:text)
     else
-      echom 'VimDo: "' . g:vimdo#background_jobs[a:job_id][0] . '" exited successfully'
+      echom 'Vimdo: "' . g:vimdo#background_jobs[a:job_id][0] . '" exited successfully'
     endif
   elseif l:opts.show_stderr_on_error
     " redirect stderr output to a temporary buffer and show
     call s:print_to_split('stderr', l:stderr)
   else
-    echom 'VimDo: "' . g:vimdo#background_jobs[a:job_id][0] . '" exited with error'
+    echom 'Vimdo: "' . g:vimdo#background_jobs[a:job_id][0] . '" exited with error'
   endif
   unlet g:vimdo#background_jobs[a:job_id]
 endfunction
@@ -230,7 +230,7 @@ function! s:print_to_float(text, width_pct, height_pct)
   let l:win_id =  nvim_open_win(l:scratch, 0, l:opts)
 
   let l:close_win = printf('s:close_win(%s)', l:win_id)
-  augroup VimDoCloseFloatWin
+  augroup VimdoCloseFloatWin
     autocmd!
     execute 'autocmd CursorMoved,CursorMovedI,InsertEnter <buffer> call ' . l:close_win
     execute 'autocmd BufEnter * call ' . l:close_win
@@ -239,7 +239,7 @@ endfunction
 
 function! s:close_win(win_id)
   call nvim_win_close(str2nr(a:win_id), v:true)
-  augroup VimDoCloseFloatWin
+  augroup VimdoCloseFloatWin
     autocmd!
   augroup END
 endfunction
@@ -424,13 +424,13 @@ endfunction
 
 " List all currently defined commands for this file type
 function! vimdo#list_commands()
-  echom ':VimDoListCmds'
+  echom ':VimdoListCmds'
   for cmd in s:list_commands()
     echom '  ' . cmd
   endfor
 endfunction
 
-" completion function for VimDo
+" completion function for Vimdo
 function! vimdo#complete_commands(ArgLead, CmdLine, CursorPos)
   return join(s:list_commands(), "\n")
 endfunction
@@ -457,7 +457,7 @@ endfunction
 " TODO: Merge list_floats and list_background_processes
 function! vimdo#list_floats()
   if g:vimdo#floats !=# {}
-    echom ':VimDoListFloats'
+    echom ':VimdoListFloats'
     echom '  #      Command'
     for l:win in items(g:vimdo#floats)
       let l:win_id = l:win[0]
@@ -471,7 +471,7 @@ endfunction
 
 function! vimdo#list_background_processes()
   if g:vimdo#background_jobs !=# {}
-    echom ':VimDoListProcs'
+    echom ':VimdoListProcs'
     echom '  #   Command'
     for l:proc in items(g:vimdo#background_jobs)
       let l:job_id = l:proc[0]
