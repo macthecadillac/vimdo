@@ -4,3 +4,4 @@
   fitting to content
 - [ ] vim8 support
 - [ ] Separate config for VimDoBang
+- [ ] Perhaps more VimDoBangxx commands for different presets
