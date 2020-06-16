@@ -65,7 +65,10 @@ function! s:term_job_exit(job_id, data, event) dict
   let l:bufnr = g:vimdo#terminal_jobs[a:job_id][1]
   unlet g:vimdo#terminal_jobs[a:job_id]
   if g:vimdo#remove_term_buffer_when_done
-    execute 'bd! ' . l:bufnr
+    try
+      execute 'bd! ' . l:bufnr
+    catch /No buffers were deleted/
+    endtry
   else
     close
   endif
@@ -78,7 +81,10 @@ function! s:term_job_exit(job_id, data, event) dict
     endif
   endfor
   for l:win_id in l:win_ids
-    call vimdo#close_win(l:win_id)
+    try
+      call vimdo#close_win(l:win_id)
+    catch /Invalid window id/
+    endtry
   endfor
 endfunction
 
@@ -228,17 +234,17 @@ function! s:print_to_float(text, width_pct, height_pct)
   call nvim_buf_set_lines(l:scratch, 0, -1, v:true, a:text)
   let l:win_id =  nvim_open_win(l:scratch, 0, l:opts)
 
-  let l:close_win = printf('s:close_win(%s)', l:win_id)
-  augroup VimdoCloseFloatWin
+  let l:close_win = printf('s:close_stdout_float(%s)', l:win_id)
+  augroup VimdoCloseStdoutFloat
     autocmd!
     execute 'autocmd CursorMoved,CursorMovedI,InsertEnter <buffer> call ' . l:close_win
     execute 'autocmd BufEnter * call ' . l:close_win
   augroup END
 endfunction
 
-function! s:close_win(win_id)
+function! s:close_stdout_float(win_id)
   call nvim_win_close(str2nr(a:win_id), v:true)
-  augroup VimdoCloseFloatWin
+  augroup VimdoCloseStdoutFloat
     autocmd!
   augroup END
 endfunction
@@ -306,12 +312,24 @@ function! s:open_float_term(cmd, term_opts, configs)
   " set terminal highlight color
   call nvim_set_current_win(l:win_id)
   setlocal winhl=Normal:Normal
+  call setbufvar(l:buf, 'vimdo_float_term_border_win_id', l:bg_id)
 
   return {
       \ 'win_id': l:win_id,
       \ 'job_id': termopen(a:cmd, a:term_opts),
       \ 'bg_id': l:bg_id
       \ }
+endfunction
+
+augroup VimdoFloatTermExit
+  autocmd!
+  autocmd QuitPre * call s:close_float_term(0)
+augroup END
+
+function! s:close_float_term(win_id)
+  if has_key(b:, 'vimdo_float_term_border_win_id')
+    call nvim_win_close(b:vimdo_float_term_border_win_id, v:true)
+  endif
 endfunction
 
 function! s:print_to_split(subcmd, text)
