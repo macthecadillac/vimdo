@@ -99,8 +99,8 @@ function! s:bg_job_exit(job_id, data, event) dict
     if l:opts.show_stdout_in_split
       call s:print_to_split(g:vimdo#background_jobs[a:job_id][0], l:text)
     elseif l:opts.show_stdout_in_float
-      call s:print_to_float(l:text, l:opts.float_fit_content,
-            \               l:opts.width_pct, l:opts.height_pct)
+      call s:print_to_float(l:text, l:opts.float_term_width_pct,
+            \               l:opts.float_term_height_pct)
     elseif l:opts.show_stdout_in_cmdline
       call s:print_to_cmdline(l:text)
     else
@@ -205,34 +205,25 @@ function! s:print_to_cmdline(text)
   echo join(a:text, "\n")
 endfunction
 
-function! s:print_to_float(text, fitcontent, width_pct, height_pct)
+function! s:print_to_float(text, width_pct, height_pct)
   let l:scratch = nvim_create_buf(v:false, v:true)
   let l:opts = {
         \ 'anchor': 'NW',
         \ 'style': 'minimal',
         \ }
-  if a:fitcontent
-    " `max . map len` in the handicapped language of vimscript
-    let l:widths = []
-    for l:line in a:text
-      let l:widths = add(l:widths, len(l:line))
-    endfor
+  " `max . map len` in the handicapped language of vimscript
+  let l:widths = []
+  for l:line in a:text
+    let l:widths = add(l:widths, len(l:line))
+  endfor
 
-    let l:opts.relative = 'cursor'
-    let l:width = max(l:widths)
-    let l:opts.width = l:width > 0 ? l:width : 1
-    let l:opts.height = len(a:text)
-    let l:opts.row = 1
-    let l:opts.col = 0
-    let l:opts.focusable = v:false
-  else
-    let l:opts.relative = 'editor'
-    let l:opts.width = a:width_pct * winwidth(0) / 100
-    let l:opts.height = a:height_pct * winheight(0) / 100
-    let l:opts.row = (winheight(0) - l:opts.height) / 2
-    let l:opts.col = (winwidth(0) - l:opts.width) / 2
-    let l:opts.focusable = v:true
-  endif
+  let l:opts.relative = 'cursor'
+  let l:width = max(l:widths)
+  let l:opts.width = l:width > 0 ? l:width : 1
+  let l:opts.height = len(a:text)
+  let l:opts.row = 1
+  let l:opts.col = 0
+  let l:opts.focusable = v:false
   call nvim_buf_set_lines(l:scratch, 0, -1, v:true, a:text)
   let l:win_id =  nvim_open_win(l:scratch, 0, l:opts)
 
