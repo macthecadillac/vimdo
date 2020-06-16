@@ -7,3 +7,5 @@
 - [ ] Perhaps more VimdoBangxx commands for different presets
 - [ ] Ability to hide/unhide terminals
 - [ ] Refactor code
+- [ ] use exit code instead of checking stderr to determine whether to show
+  stderr
