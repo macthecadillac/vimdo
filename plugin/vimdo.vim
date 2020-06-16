@@ -27,7 +27,6 @@ let g:vimdo#float_term_width_max = get(g:, 'vimdo#float_term_width_max', 80)
 let g:vimdo#float_term_height_min = get(g:, 'vimdo#float_term_height_min', 15)
 let g:vimdo#float_term_width_min = get(g:, 'vimdo#float_term_width_min', 40)
 
-let g:vimdo#float_term_anchor = get(g:, 'vimdo#float_term_anchor', 'SE')
 let g:vimdo#float_term_relative = get(g:, 'vimdo#float_term_relative', 'win')
 let g:vimdo#open_term_in_float = get(g:, 'vimdo#open_term_in_float', 0)
 

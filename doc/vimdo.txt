@@ -276,14 +276,6 @@ g:vimdo#float_term_width_min                        *g:vimdo#float_term_width_mi
 
   The minimum width of the floating terminal.
 
-g:vimdo#float_term_anchor                              *g:vimdo#float_term_anchor*
-
-  Type: |string|
-  Default: `'SE'`
-
-  The corner of the terminal for which the coordinates are calculated. Valid
-  options are `'NW'`, `'NE'`, `'SW'`, and `'SE'`.
-
 g:vimdo#float_term_relative                          *g:vimdo#float_term_relative*
 
   Type: |string|

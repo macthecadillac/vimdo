@@ -159,7 +159,6 @@ function! s:read_global_config()
         \ 'float_term_width_max': g:vimdo#float_term_width_max,
         \ 'float_term_height_min': g:vimdo#float_term_height_min,
         \ 'float_term_width_min': g:vimdo#float_term_width_min,
-        \ 'float_term_anchor': g:vimdo#float_term_anchor,
         \ 'float_term_relative': g:vimdo#float_term_relative,
         \ 'open_term_in_float': g:vimdo#open_term_in_float,
         \ }
@@ -276,7 +275,7 @@ function! s:open_float_term(cmd, term_opts, configs)
 
   " set up the background
   let l:bg_opts = {
-        \ 'anchor': a:configs.float_term_anchor,
+        \ 'anchor': 'SE',
         \ 'style': 'minimal',
         \ 'relative': g:vimdo#float_term_relative,
         \ 'width': l:width + 2,
@@ -294,7 +293,7 @@ function! s:open_float_term(cmd, term_opts, configs)
 
   " set up the main terminal
   let l:opts = {
-        \ 'anchor': a:configs.float_term_anchor,
+        \ 'anchor': 'SE',
         \ 'style': 'minimal',
         \ 'relative': a:configs.float_term_relative,
         \ 'width': l:width,
