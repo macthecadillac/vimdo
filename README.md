@@ -41,6 +41,10 @@ type
 `VimDoCloseFloat`: Close the floating window with the provided window ID.
 `VimDoCloseFloat {#}` where `#` is the window ID listed by `VimDoFloats`.
 
+`VimDoBang`: `VimDoBang {cmd}` where `cmd` is a shell command. This is an
+asynchronous version of the usual vim bang command. This follows the global
+configuration.
+
 ## Configuration
 
 Configurations can be global or local. Global configurations reside in your

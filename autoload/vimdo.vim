@@ -140,19 +140,8 @@ function! s:create_term_cmd(cmd)
   return l:cmd
 endfunction
 
-function! s:extract_cmd_opt(subcmd)
-  " file type specific commands trump catch-all commands
-  if has_key(g:vimdo#cmds, &filetype) && has_key(g:vimdo#cmds, '*')
-    let l:extcmds = extend(deepcopy(g:vimdo#cmds['*']), g:vimdo#cmds[&filetype])
-  elseif has_key(g:vimdo#cmds, &filetype)
-    let l:extcmds = g:vimdo#cmds[&filetype]
-  elseif has_key(g:vimdo#cmds, '*')
-    let l:extcmds = g:vimdo#cmds['*']
-  else
-    let l:extcmds = {}
-  endif
-
-  let l:global_settings = {
+function! s:read_global_config()
+  return {
         \ 'exit_message': g:vimdo#exit_message,
         \ 'term_height': g:vimdo#term_height,
         \ 'term_width': g:vimdo#term_width,
@@ -174,10 +163,23 @@ function! s:extract_cmd_opt(subcmd)
         \ 'float_term_relative': g:vimdo#float_term_relative,
         \ 'open_term_in_float': g:vimdo#open_term_in_float,
         \ }
+endfunction
+
+function! s:extract_cmd_opt(subcmd)
+  " file type specific commands trump catch-all commands
+  if has_key(g:vimdo#cmds, &filetype) && has_key(g:vimdo#cmds, '*')
+    let l:extcmds = extend(deepcopy(g:vimdo#cmds['*']), g:vimdo#cmds[&filetype])
+  elseif has_key(g:vimdo#cmds, &filetype)
+    let l:extcmds = g:vimdo#cmds[&filetype]
+  elseif has_key(g:vimdo#cmds, '*')
+    let l:extcmds = g:vimdo#cmds['*']
+  else
+    let l:extcmds = {}
+  endif
 
   let l:filetype_defaults = get(g:vimdo#filetype_defaults, &filetype, {})
   let l:cmd = extend(deepcopy(l:filetype_defaults), l:extcmds[a:subcmd], 'force')
-  return extend(l:global_settings, l:cmd, 'force')
+  return extend(s:read_global_config(), l:cmd, 'force')
 endfunction
 
 function! s:build_cmd(cmd)
@@ -321,6 +323,23 @@ function! s:print_to_split(subcmd, text)
   resize 10
 endfunction
 
+function! s:cd_root(opts)
+  let l:root = ''
+  if a:opts.exe_in_proj_root
+    let l:root = vimdo#util#root()
+    if l:root !=# ''
+      execute 'cd' vimdo#util#root()
+    endif
+  endif
+  return l:root
+endfunction
+
+function! s:restore_path(opts)
+  if a:opts.exe_in_proj_root
+    execute 'cd' b:file_path
+  endif
+endfunction
+
 function! vimdo#execute_subcmd(subcmd)
   let b:file_path = getcwd()
   let l:filename = expand('%:f')
@@ -333,13 +352,7 @@ function! vimdo#execute_subcmd(subcmd)
     let l:raw_cmd = s:build_cmd(l:cmd_opts.cmd)
     let l:cmd = l:cmd_opts.in_term ? s:create_term_cmd(l:raw_cmd) : l:raw_cmd
 
-    let l:root = ''
-    if l:cmd_opts.exe_in_proj_root
-      let l:root = vimdo#util#root()
-      if l:root !=# ''
-        execute 'cd' vimdo#util#root()
-      endif
-    endif
+    let l:root = s:cd_root(l:cmd_opts)
 
     if has_key(l:cmd_opts, 'callback')
       let l:callback = l:cmd_opts.callback
@@ -381,9 +394,7 @@ function! vimdo#execute_subcmd(subcmd)
       endif
     endif
 
-    if l:cmd_opts.exe_in_proj_root
-      execute 'cd' b:file_path
-    endif
+    call s:restore_path(l:cmd_opts)
   catch /Key not present in Dictionary: cmd/
     echohl ErrorMsg
     echom 'Invalid configuration entry.'
@@ -480,4 +491,14 @@ function! vimdo#stop_process(job_id)
       echom 'No matching process found'
     endif
   endif
+endfunction
+
+function! vimdo#bang(...)
+  let l:opts = s:read_global_config()
+  let l:opts.cmd = a:000
+  let l:job = s:new_job(l:opts, '')
+  let l:root = s:cd_root(l:opts)
+  let l:job_id = jobstart(a:000, l:job)
+  let g:vimdo#background_jobs[l:job_id] = [join(a:000, ' '), l:job]
+  call s:restore_path(l:opts)
 endfunction

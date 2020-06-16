@@ -23,6 +23,10 @@ based on file type.
                 `VimDoCloseFloat {#}` where `#` is the window ID listed by
                 |VimDoFloats|.
 
+*VimDoBang*       - `VimDoBang {cmd}` where `cmd` is a shell command. This is an
+                asynchronous version of the usual vim bang command. This
+                follows the global configuration.
+
 
 ------------------------------------------------------------------------------
 2. Configurations
