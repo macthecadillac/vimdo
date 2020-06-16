@@ -63,15 +63,17 @@ endfunction
 
 function! s:term_job_exit(job_id, data, event) dict
   let l:bufnr = g:vimdo#terminal_jobs[a:job_id][1]
-  unlet g:vimdo#terminal_jobs[a:job_id]
-  if g:vimdo#remove_term_buffer_when_done
-    try
-      execute 'bd! ' . l:bufnr
-    catch /No buffers were deleted/
-    endtry
-  else
-    close
+  if !g:vimdo#terminal_jobs[a:job_id][0].opts.open_term_in_float
+    if g:vimdo#remove_term_buffer_when_done
+      try
+        execute 'bd! ' . l:bufnr
+      catch /No buffers were deleted/
+      endtry
+    else
+      close
+    endif
   endif
+  unlet g:vimdo#terminal_jobs[a:job_id]
 
   " remove float from the list of float-terms if possible
   let l:win_ids = []
@@ -294,8 +296,7 @@ function! s:open_float_term(cmd, term_opts, configs)
   call nvim_buf_set_lines(l:bg_buf, 0, -1, v:true, l:bg)
   let l:bg_id = nvim_open_win(l:bg_buf, 0, l:bg_opts)
   " set border region highlight color
-  call nvim_set_current_win(l:bg_id)
-  setlocal winhl=Normal:Normal
+  call nvim_win_set_option(l:bg_id, 'winhl', 'Normal:Normal,NormalNC:NormalNC')
 
   " set up the main terminal
   let l:opts = {
@@ -310,8 +311,8 @@ function! s:open_float_term(cmd, term_opts, configs)
         \ }
   let l:win_id = nvim_open_win(l:buf, 0, l:opts)
   " set terminal highlight color
+  call nvim_win_set_option(l:win_id, 'winhl', 'Normal:Normal,NormalNC:NormalNC')
   call nvim_set_current_win(l:win_id)
-  setlocal winhl=Normal:Normal
   call setbufvar(l:buf, 'vimdo_float_term_border_win_id', l:bg_id)
 
   return {
