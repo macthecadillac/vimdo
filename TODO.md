@@ -5,3 +5,4 @@
 - [ ] vim8 support
 - [ ] Separate config for VimdoBang
 - [ ] Perhaps more VimdoBangxx commands for different presets
+- [ ] Ability to hide/unhide terminals
