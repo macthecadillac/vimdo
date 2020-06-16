@@ -53,6 +53,10 @@ type
 asynchronous version of the usual vim bang command. This follows the global
 configuration.
 
+`VimdoBangS`: `VimdoBangS {cmd}` where `cmd` is a shell command. This is the
+same as `VimdoBang` with the exception that it prints the stdout output to a
+new split.
+
 ## Configuration
 
 Configurations can be global or local. Global configurations reside in your

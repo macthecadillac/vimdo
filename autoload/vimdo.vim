@@ -511,8 +511,8 @@ function! vimdo#stop_process(job_id)
   endif
 endfunction
 
-function! vimdo#bang(...)
-  let l:opts = s:read_global_config()
+function! vimdo#bang(opts, ...)
+  let l:opts = extend(s:read_global_config(), a:opts, 'force')
   let l:opts.cmd = a:000
   let l:job = s:new_job(l:opts, '')
   let l:root = s:cd_root(l:opts)

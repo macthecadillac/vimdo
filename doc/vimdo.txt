@@ -26,6 +26,9 @@ A configurable plugin to execute external commands asynchronously.
                 asynchronous version of the usual vim bang command. This
                 follows the global configuration.
 
+*VimdoBangS*      - `VimdoBangS {cmd}` where `cmd` is a shell command. This is
+                the same as `VimdoBang` with the exception that it prints the
+                stdout output to a new split.
 
 ------------------------------------------------------------------------------
 2. Configurations
