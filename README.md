@@ -1,10 +1,7 @@
 # VimDo -- Asynchronous Executor
 
-A configurable plugin to execute external commands in the built-in terminal
-based on file type. This is a rewrite of an unpublished plugin I wrote before
-async was around. The old incarnation was written in a mixture of python and
-shell to bypass the inability of vim to launch processes off the main thread, a
-situation that has since been ameliorated by the launch of neovim.
+A configurable plugin to execute external commands asynchronously. This is a
+rewrite of an unpublished plugin I wrote before async was around.
 
 ## Demo
 
@@ -76,6 +73,11 @@ dictionary that must contain this entry:
 Aside from `cmd`, you can include any valid configuration keys in the dictionary
 and these will have precedence over the global/file type configurations.
 
+One extra key that is not available as a configuration key is `callback`:
+
+  - `callback`: `string` Name of the callback function. The callback
+                function takes a list of strings as its only argument.
+
 Instead of being specific file types, the first level keys could optionally be a
 wildcard, in this case `*` that serves as a catch-all, and all its commands will
 be available for all file types. Notice that file type specific commands will
@@ -91,33 +93,47 @@ let g:vimdo#cmds = {
       \       'with_filename': 0,
       \     },
       \   },
-      \ 'python': {
-      \     'run': {
-      \       'cmd': '$HOME/anaconda3/bin/python',
-      \       'in_term': 1
-      \     },
-      \     'background-run': {'cmd': '$HOME/anaconda3/bin/python'},
-      \   },
-      \ 'tex': {
-      \     'build': {
-      \       'cmd': 'latexmk -silent',
-      \       'in_term': 1
-      \     },
-      \     'continuous-build': {'cmd': 'latexmk -pvc -interaction=nonstopmode'},
-      \   },
       \ 'rust': {
       \     'run': {'cmd': 'cargo run', 'with_filename': 0, 'in_term': 1},
-      \     'quick-build': {
-      \       'cmd': 'cargo build',
-      \       'with_filename': 0,
-      \       'in_term': 1
-      \     },
       \     'release-build': {
       \       'cmd': 'cargo build --release',
       \       'in_term': 1
       \     },
       \   },
+      \ 'haskell': {
+      \     'type': {
+      \        'cmd': ['stack', 'exec', 'hhpc', '--', 'type',
+      \                'vimdo#util#filename', 'vimdo#util#line', 'vimdo#util#col'],
+      \        'show_stdout_in_float': 1,
+      \        'in_term': 0,
+      \        'callback': 'ProcessTypeResults',
+      \      }
+      \   },
       \ }
+
+function! ProcessTypeResults(text)
+  let l:o = ['']
+  let l:s = 100000
+  let l:col = col('.')
+  for l:line in a:text
+    let l:output = split(l:line, '"')
+    if l:output !=# []
+      let l:num = split(l:output[0])
+      " if start and end aren't on the same line then it is not just for the
+      " word the cursor is sitting on
+      if l:num[0] ==# l:num[2]
+        let l:d1 = abs(l:num[1] - l:col)
+        let l:d2 = abs(l:num[3] - l:col)
+        let l:s1 = l:d1 + l:d2
+        if l:s1 < l:s
+          let l:o = [l:output[1]]
+          let l:s = l:s1
+        endif
+      endif
+    endif
+  endfor
+  return l:o
+endfunction
 ```
 
 For further configuration options, please refer to the documentation.
