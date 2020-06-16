@@ -6,6 +6,17 @@ async was around. The old incarnation was written in a mixture of python and
 shell to bypass the inability of vim to launch processes off the main thread, a
 situation that has since been ameliorated by the launch of neovim.
 
+## Demo
+
+### User defined command
+![User defined command](.github/terminal_job.gif)
+
+### Shell command and user defined command
+![Shell command and user defined command](.github/terminal_job_bang.gif)
+
+### User defined background command with callback
+![User defined background command with callback](.github/stdout_float.gif)
+
 ## Requirements
 
 Neovim >= `0.2` for most of the stuff to work. Version `0.4` or above
