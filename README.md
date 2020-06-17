@@ -5,9 +5,6 @@ rewrite of an unpublished plugin I wrote before async was around.
 
 ## Demo
 
-### User defined command
-![User defined command](.github/terminal_job.gif)
-
 ### Shell command and user defined command
 ![Shell command and user defined command](.github/terminal_job_bang.gif)
 
