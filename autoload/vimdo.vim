@@ -429,7 +429,7 @@ function! s:list_commands()
   let l:filetype = &filetype
   if has_key(g:vimdo#cmds, l:filetype) && has_key(g:vimdo#cmds, '*')
     let l:cmd_dicts = extend(deepcopy(g:vimdo#cmds['*']), g:vimdo#cmds[l:filetype])
-    let l:cmd = keys(l:cmd_dicts)
+    let l:cmds = keys(l:cmd_dicts)
   elseif has_key(g:vimdo#cmds, l:filetype)
     let l:cmds = keys(g:vimdo#cmds[l:filetype])
   elseif has_key(g:vimdo#cmds, '*')
