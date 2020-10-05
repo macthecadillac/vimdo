@@ -1,5 +1,6 @@
 function! vimdo#util#filename()
-  return expand('%:p')
+  " need to escape spaces so paths with spaces will work in the shell
+  return substitute(expand('%:p'), ' ', '\\ ', 'g')
 endfunction
 
 function! vimdo#util#path()
