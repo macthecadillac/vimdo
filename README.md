@@ -54,6 +54,10 @@ configuration.
 same as `VimdoBang` with the exception that it prints the stdout output to a
 new split.
 
+`VimdoBangT`: `VimdoBangT {cmd}` where `cmd` is a shell command. This is the
+same as `VimdoBang` with the exception that it is executed in a floating
+terminal.
+
 ## Configuration
 
 Configurations can be global or local. Global configurations reside in your

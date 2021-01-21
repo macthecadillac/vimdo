@@ -38,3 +38,4 @@ command! -nargs=1 -complete=custom,vimdo#complete_floats VimdoCloseFloat call vi
 command! VimdoList call vimdo#list_commands()
 command! -nargs=+ VimdoBang call vimdo#bang({}, <f-args>)
 command! -nargs=+ VimdoBangS call vimdo#bang({'show_stdout_in_split': 1}, <f-args>)
+command! -nargs=+ VimdoBangT call vimdo#bang({'in_term': 1}, <f-args>)

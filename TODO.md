@@ -1,7 +1,5 @@
 - [ ] FIXME: issues with interoperability between 'in_term' and
   'exe_in_proj_root'
-- [ ] FIXME: local configurations should be merged with the global
-  configuration and should not remove keys
 - [ ] Refactor code
   - [ ] split `vimdo#execute_subcmd` into something like `vimdo#execute`
   and `vimdo#parse_alias` then we can use `vimdo#execute` to implement `VimdoBangx`
