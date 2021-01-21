@@ -1,16 +1,27 @@
 set encoding=utf8
 scriptencoding "utf-8"
 
+function! s:source_path_while_preserving_cmds(path)
+  " make a copy the global cmds
+  let l:cmds = deepcopy(g:vimdo#cmds)
+  " read local config, overwriting any global configs in conflict
+  execute 'source ' . a:path
+  " merge the cmds configured locally with the copy of the global cmds
+  let l:cmds = extend(deepcopy(l:cmds), g:vimdo#cmds)
+  " set the result as cmds
+  let g:vimdo#cmds = l:cmds
+endfunction
+
 " Find local environmental configuration and overwrite the system-wide
 " configuration, if any
 function! s:source_local_configuration()
   if filereadable('./.vimdo.vim')
-    execute 'source .vimdo.vim'
+    call s:source_path_while_preserving_cmds('.vimdo.vim')
   else
     let l:root = vimdo#util#root()
     if l:root !=# ''
       if filereadable(l:root . '/.vimdo.vim')
-        execute 'source ' . l:root . '/.vimdo.vim'
+        call s:source_path_while_preserving_cmds(l:root . '/.vimdo.vim')
       endif
     endif
   endif
