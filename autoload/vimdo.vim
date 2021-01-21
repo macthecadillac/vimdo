@@ -15,6 +15,7 @@ endfunction
 " Find local environmental configuration and overwrite the system-wide
 " configuration, if any
 function! vimdo#source_local_configuration()
+  let b:file_path = getcwd()
   if filereadable('./.vimdo.vim')
     call s:source_path_while_preserving_cmds('.vimdo.vim')
   else
@@ -370,7 +371,6 @@ function! s:restore_path(opts)
 endfunction
 
 function! vimdo#execute_subcmd(subcmd)
-  let b:file_path = getcwd()
   let l:filename = expand('%:f')
 
   try
