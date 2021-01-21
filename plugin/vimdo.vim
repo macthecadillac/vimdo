@@ -1,3 +1,6 @@
+call vimdo#source_local_configuration()
+
+" set global defaults
 let g:vimdo#split_direction = get(g:, 'vimdo#split_direction', 'down')
 let g:vimdo#terminal_jobs = {}
 let g:vimdo#background_jobs = {}
