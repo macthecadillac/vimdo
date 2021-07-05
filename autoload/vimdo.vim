@@ -372,6 +372,7 @@ endfunction
 
 function! vimdo#execute_subcmd(subcmd)
   let l:filename = expand('%:f')
+  let b:file_path = getcwd()
 
   try
     let l:cmd_opts = s:extract_cmd_opt(a:subcmd)
@@ -395,7 +396,9 @@ function! vimdo#execute_subcmd(subcmd)
     if has('nvim')
       if !(l:cmd_opts.exe_in_proj_root && l:root ==# '')
         if l:cmd_opts.in_term
-          if has('nvim-0.2')
+          if exists(':FloatermNew')
+            execute 'FloatermNew ' . l:cmd
+          elseif has('nvim-0.2')
             if g:vimdo#open_term_in_float && has('nvim-0.4')
               let l:job_attr = s:open_float_term(l:cmd, l:job, l:cmd_opts)
               let l:job_id = l:job_attr.job_id

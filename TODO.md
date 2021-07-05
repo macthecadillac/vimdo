@@ -1,5 +1,6 @@
 - [ ] FIXME: issues with interoperability between 'in_term' and
   'exe_in_proj_root'
+- [ ] FIXME: VimdoBangT weird errors
 - [ ] Add support for per buffer local settings
 - [ ] Refactor code
   - [ ] split `vimdo#execute_subcmd` into something like `vimdo#execute`

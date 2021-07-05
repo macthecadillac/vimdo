@@ -16,6 +16,10 @@ rewrite of an unpublished plugin I wrote before async was around.
 Neovim >= `0.2` for most of the stuff to work. Version `0.4` or above
 recommended.
 
+Optional: [floaterm](https://github.com/voldikss/vim-floaterm). If floaterm is
+detected, Vimdo will create new floaterm windows for terminal jobs instead of
+managing them internally.
+
 ## Installation
 
 [vim-plug](https://github.com/junegunn/vim-plug)
